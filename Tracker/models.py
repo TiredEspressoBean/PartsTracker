@@ -26,7 +26,7 @@ class User(AbstractUser):
     company = models.CharField(max_length=150)
 
 
-class jOrder(models.Model):
+class Order(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', "Pending"
         IN_PROGRESS = 'IN_PROGRESS', "In progress"
