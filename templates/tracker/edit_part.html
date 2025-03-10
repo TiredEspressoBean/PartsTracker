@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Part</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="name">Part Name:</label>
+        <input type="text" id="name" name="name" value="{{ part.name }}" required>
+
+        <label for="part_type">Part Type:</label>
+        <select id="part_type" name="part_type">
+            {% for type in part_types %}
+                <option value="{{ type.id }}" {% if part.part_type.id == type.id %}selected{% endif %}>
+                    {{ type.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="step">Step:</label>
+        <select id="step" name="step">
+            {% for s in steps %}
+                <option value="{{ s.id }}" {% if part.step.id == s.id %}selected{% endif %}>
+                    {{ s.step }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+            <option value="">PENDING</option>
+            {% for choice in status %}
+                <option value="{{ choice }}" {% if part.status == choice %}selected{% endif %}>
+                    {{ choice }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="assigned_emp">Assigned Employee:</label>
+        <select id="assigned_emp" name="assigned_emp">
+            <option value="">Unassigned</option>
+            {% for emp in employees %}
+                <option value="{{ emp.id }}" {% if part.assigned_emp.id == emp.id %}selected{% endif %}>
+                    {{ emp.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="customer">Customer:</label>
+        <select id="customer" name="customer">
+            {% for cust in customers %}
+                <option value="{{ cust.id }}" {% if part.customer.id == cust.id %}selected{% endif %}>
+                    {{ cust.company }} {{ cust.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="order">Order:</label>
+        <select id="order" name="order">
+            {% for o in orders %}
+                <option value="{{ o.id }}" {% if part.order.id == o.id %}selected{% endif %}>
+                    {{ o.id }} - {{ o.description }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="estimated_completion">Estimated Completion Date:</label>
+        <input type="date" id="estimated_completion" name="estimated_completion" value="{{ part.estimated_completion|date:'Y-m-d' }}">
+
+        <button type="submit" class="btn">Save Changes</button>
+    </form>
+
+    <a href="{% url 'edit' %}" class="btn btn-secondary">Cancel</a>
+</div>
+{% endblock %}

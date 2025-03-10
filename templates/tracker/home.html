@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <div class="container text-center">
+        <h1 class="mt-5">Welcome to Our Manufacturing Tracker</h1>
+        <p class="lead mt-3">
+            Track your orders and manage production efficiently.
+        </p>
+
+        {% if user.is_authenticated %}
+            <p class="mt-4">You are logged in as <strong>{{ user.username }}</strong>.</p>
+        {% else %}
+            <p class="mt-4"><a href="{% url 'login' %}" class="btn btn-primary">Login</a></p>
+        {% endif %}
+
+        <div class="mt-5">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Cnc_lathe.png"
+                 alt="Ambac Picture of some sort">
+        </div>
+
+{#    Convert UTC time to users timezone#}
+        <footer class="mt-5 text-muted">
+            <p>Last updated: {{ current_time }}</p>
+        </footer>
+    </div>
+{% endblock %}

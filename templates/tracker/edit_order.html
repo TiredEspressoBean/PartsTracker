@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h1>Edit Order</h1>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <label for="order_id">Order ID:</label>
+            <input type="text" id="order_id" name="order_id" value="{{ order.id }}" readonly>
+
+            <label for="customer">Customer:</label>
+            <select id="customer" name="customer">
+                {% for cust in customers %}
+                    <option value="{{ cust.id }}" {% if order.customer.id == cust.id %}selected{% endif %}>
+                        {{ cust.company }} - {{ cust.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        
+            <label for="status">Order Status:</label>
+            <select id="status" name="status">
+                {% for s in statuses %}
+                    <option value="{{ s.id }}" {% if order.status.id == s.id %}selected{% endif %}>
+                        {{ s.status }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="estimated_delivery">Estimated Delivery Date:</label>
+            <input type="date" id="estimated_delivery" name="estimated_delivery"
+                   value="{{ order.estimated_completion|date:'Y-m-d' }}">
+
+            <h2>Order Items</h2>
+            <div id="order-items">
+                {% for item in order.orderitem_set.all %}
+                    <div class="order-item">
+                        <label>Part:</label>
+                        <select name="order_items-{{ forloop.counter }}">
+                            {% for part in parts %}
+                                <option value="{{ part.id }}" {% if item.part.id == part.id %}selected{% endif %}>
+                                    {{ part.id }} {{ part.name }} - {{ part.part_type.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="remove-item">Remove</button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-item">Add Part</button>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+
+        <a href="{% url 'edit' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+
+
+    <script>
+        document.getElementById("add-item").addEventListener("click", function () {
+            let container = document.getElementById("order-items");
+            let index = container.children.length + 1;
+
+            let newItem = document.createElement("div");
+            newItem.classList.add("order-item");
+            newItem.innerHTML = `
+            <label>Part:</label>
+            <select name="order_items-${index}">
+                {% for part in parts %}
+                    <option value="{{ part.id }}">{{ part.name }} - {{ part.part_type.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="remove-item">Remove</button>
+        `;
+
+            container.appendChild(newItem);
+        });
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-item")) {
+                event.target.parentElement.remove();
+            }
+        });
+    </script>
+
+{% endblock %}

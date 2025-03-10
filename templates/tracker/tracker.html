@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+    <div class="container">
+        {% if orders %}
+            {% for order in orders %}
+                <a class="card-link" href="{% url 'order_view' order.id %}">
+                    <div class="card-content">
+                        <h3>{{ order.name }}</h3>
+                        <p>Estimated Completion: {{ order.estimated_completion }}</p>
+
+                        <span class="status-indicator 
+                        {% if part.is_complete %} status-complete 
+                        {% elif part.is_in_progress %} status-in-progress 
+                        {% else %} status-pending {% endif %}">
+                    </span>
+                    </div>
+                </a>
+            {% endfor %}
+        {% endif %}
+        {% if parts %}
+
+            {% for part in parts %}
+                <a class="card-link" href="{% url 'part_view' part.id %}">
+                    <div class="card-content">
+                        <h3>{{ part.name }}</h3>
+                        <p>Estimated Completion: {{ part.estimated_completion }}</p>
+
+                        <span class="status-indicator 
+                        {% if part.is_complete %} status-complete 
+                        {% elif part.is_in_progress %} status-in-progress 
+                        {% else %} status-pending {% endif %}">
+                    </span>
+                    </div>
+                </a>
+            {% endfor %}
+        {% else %}
+            <p>
+                Sorry you have no associated products, please make sure you are logged in.
+            </p>
+        {% endif %}
+    </div>
+
+{% endblock %}

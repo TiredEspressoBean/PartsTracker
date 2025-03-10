@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ part.name }}</h2>
+    <p>Estimated Completion: {{ part.estimated_completion }}</p>
+    <p>Status: 
+        <span class="status-indicator 
+            {% if part.is_complete %} status-complete 
+            {% elif part.is_in_progress %} status-in-progress 
+            {% else %} status-pending {% endif %}">
+        </span>
+    </p>
+
+    <a href="{% url 'tracker' %}">Back to List</a>
+</div>
+{% endblock %}

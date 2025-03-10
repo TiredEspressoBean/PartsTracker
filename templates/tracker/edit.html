@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{#TODO: Add delete buttons to edit forms#}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Parts & Orders</h1>
+
+    <h2>Parts</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer Company</th>
+                <th>Customer</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts %}
+            <tr>
+                <td>{{ part.id }}</td>
+                <td>{{ part.customer.company }}</td>
+                <td>{{ part.customer }}</td>
+                <td>{{ part.name }}</td>
+                {% if part.is_complete %}
+                <td>Completed</td>
+                {% else %}
+                    <td>Not Completed</td>
+                {% endif %}
+                <td>
+                    <a href="{% url 'edit_part' part.id %}" class="btn">Edit</a>
+{#                    Delete Button#}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Orders</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer Company</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer.company }}</td>
+                <td>{{ order.customer }}</td>
+                {% if order.is_complete %}
+                    <td>Not complete</td>
+                {% else %}
+                    <td>Complete</td>
+                {% endif %}
+                <td>
+                    <a href="{% url 'edit_order' order.id %}" class="btn">Edit</a>
+{#                    Delete Button #}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
