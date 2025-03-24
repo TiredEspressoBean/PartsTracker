@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 
 {% block content %}
 
@@ -27,8 +28,15 @@
                 <td>{{ form.password }}</td>
             </tr>
         </table>
-        <input type="submit" value="login">
-        <input type="hidden" name="next" value="{{ next }}">
+        <div>
+            <a href="{% provider_login_url 'microsoft' %}" style="text-decoration: none;">
+                <div style="display: inline-block; background-color: #0078D4; color: white; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px;">
+                    Sign in with Microsoft
+                </div>
+            </a>
+            <input type="submit" value="login">
+            <input type="hidden" name="next" value="{{ next }}">
+        </div>
     </form>
 
     {# Assumes you set up the password_reset view in your URLconf #}

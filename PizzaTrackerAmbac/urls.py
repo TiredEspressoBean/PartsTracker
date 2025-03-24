@@ -33,7 +33,7 @@ urlpatterns = [
     path('edit/', views.edit, name='edit'),
     path('upload/', views.upload),
     path('docs/<int:doc_id>', views.docs, name='docs'),
-
+    path("accounts/", include("allauth.urls")),
 ]
 # TODO: Add docs paths: Docs - for all docs, Doc/part_id for docs related to that part
 

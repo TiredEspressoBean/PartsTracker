@@ -63,8 +63,7 @@ CREATE TABLE IF NOT EXISTS "Tracker_partdoc"
     "id"           integer      NOT NULL PRIMARY KEY AUTOINCREMENT,
     "is_image"     bool         NOT NULL,
     "part_step"    integer      NOT NULL,
-    "file_name"    varchar(50)  NOT N
-        ULL,
+    "file_name"    varchar(50)  NOT NULL,
     "file"         varchar(100) NOT NULL,
     "part_type_id" bigint       NULL REFERENCES "Tracker_parttype" ("id") DEFERRABLE INITIALLY DEFERRED,
     "uploader_id"  bigint       NULL REFERENCES "Tracker_user" ("id") DEFERRABLE INITIALLY DEFERRED

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv, dotenv_values
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.microsoft",
     'Tracker'
 ]
 
@@ -47,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware"
 ]
 
 ROOT_URLCONF = 'PizzaTrackerAmbac.urls'
@@ -121,17 +128,42 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #### Non boilerplate starts here ####
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+
 AUTH_USER_MODEL = 'Tracker.User'
 
 STATICFILES_DIRS = (
     BASE_DIR / 'Tracker/static',
 )
 
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    "microsoft": {
+        "APP": {
+            "client_id": "YOUR_CLIENT_ID",
+            "secret": "YOUR_CLIENT_SECRET",
+            "key": "",
+        },
+        "SCOPE": ["email", "profile"],
+        "AUTH_PARAMS": {"response_type": "code"},
+    }
+}
+
 LOGIN_REDIRECT_URL = '/tracker'
 
 LOGOUT_REDIRECT_URL = '/tracker'
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+load_dotenv()
+
+HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY")
+
+
 
 # TODO: Only use once ready for production
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

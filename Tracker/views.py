@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_list_or_404, get_object_or_40
 from django.utils import timezone
 from django.utils.timezone import now
 
-from Tracker.models import Part, Order, OrderItem, PartType, Step, User
+from Tracker.models import Part, Deal, DealItem, PartType, Step, User
 
 
 # Create your views here.
