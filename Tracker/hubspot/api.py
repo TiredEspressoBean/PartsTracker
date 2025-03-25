@@ -32,16 +32,26 @@ def get_all_deals():
     return all_deals_data
 
 
-def get_companies_from_deal_id(deal_id):
+def get_companies_from_deal_id(deal_ids):
     companies_data = []
-    for deal in deal_id:
-        deal_url = HUBSPOT_API_BASE_URL + "/associations/Deals/Companies/batch/read"
-        response = requests.get(deal_url, headers=HEADERS, params={"inputs": [{"id": deal}]})
-<<<<<<< HEAD
-        x=0
-=======
-~        x=0
->>>>>>> 53a4b77 (B)
+    for deal_id in deal_ids:
+        company_assoc_url = HUBSPOT_API_BASE_URL + "/associations/Deals/Companies/batch/read"
+        response = requests.get(company_assoc_url, headers=HEADERS, params={"inputs": [{"id": deal_id}]})
+        if response.status_code != 200:
+            print(f"Error: {response.status_code}: {response.text}")
+        else:
+            data = response.json()
+            companies_data.extend(data.get("results", []))
+    return companies_data
 
-def get_contacts_from_deal_id(deal_id):
+def get_contacts_from_deal_id(deal_ids):
     contacts_data = []
+    for deal_id in deal_ids:
+        contacts_assoc_url = HUBSPOT_API_BASE_URL + "/associations/Deals/Contacts/batch/read"
+        response = requests.get(contacts_assoc_url, headers=HEADERS, params={"inputs": [{"id":deal_id}]})
+        if response.status_code != 200:
+            print(f"Error: {response.status_code}: {response.text}")
+        else:
+            data = response.json()
+            contacts_data.extend(data.get("results", []))
+    return contacts_data

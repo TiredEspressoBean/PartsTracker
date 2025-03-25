@@ -1,96 +1,52 @@
-import random
-from datetime import date, timedelta
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-from Tracker.models import PartType, Step, User, Order, Part, PartDoc, OrderItem
-
+from django.utils import timezone
+from Tracker.models import Companies, User, PartType, Step, Deal, Part, DealItem, Equipment, EquipmentUsed
+import random
 
 class Command(BaseCommand):
-    help = "Populates the database with test data"
+    help = "Populate the database with sample data"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("🚀 Populating database with test data...")
+        # Create Companies
+        company1 = Companies.objects.create(name="TechCorp", description="A leading tech manufacturer.")
+        company2 = Companies.objects.create(name="MechaWorks", description="Experts in mechanical parts.")
 
         # Create Users
-        users = list(User.objects.bulk_create([
-            User(username=f"user_{i}", password="test123", company=f"Company_{i}")
-            for i in range(5)
-        ]))
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(users)} users"))
+        user1 = User.objects.create(username="john_doe", email="john@example.com", parent_company=company1)
+        user2 = User.objects.create(username="jane_smith", email="jane@example.com", parent_company=company2)
 
         # Create Part Types
-        part_types = list(PartType.objects.bulk_create([
-            PartType(name=f"PartType_{i}", num_steps=random.randint(2, 5))
-            for i in range(3)
-        ]))
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(part_types)} part types"))
+        part_type1 = PartType.objects.create(name="Gizmo", num_steps=3)
+        part_type2 = PartType.objects.create(name="Widget", num_steps=4)
 
         # Create Steps
         steps = []
-        for part_type in part_types:
-            steps.extend(Step.objects.bulk_create([
-                Step(
-                    step=i + 1,
-                    description=f"Step {i + 1} for {part_type.name}",
-                    part_model=part_type,
-                    completion_time="12:00:00"  # Arbitrary time
-                ) for i in range(part_type.num_steps)
-            ]))
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(steps)} steps"))
+        for i in range(1, 4):
+            step = Step.objects.create(step=i, description=f"Step {i} for Gizmo", part_model=part_type1, completion_time=timezone.now().time())
+            steps.append(step)
 
-        # Create Orders
-        orders = list(Order.objects.bulk_create([
-            Order(
-                name=f"Order_{i}",
-                customer=random.choice(users),
-                is_complete=random.choice([True, False]),
-                estimated_completion=date.today() + timedelta(days=random.randint(5, 20))
-            ) for i in range(5)
-        ]))
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(orders)} orders"))
+        for i in range(1, 5):
+            step = Step.objects.create(step=i, description=f"Step {i} for Widget", part_model=part_type2, completion_time=timezone.now().time())
+            steps.append(step)
+
+        # Create Deals
+        deal1 = Deal.objects.create(name="Deal A", customer=user1, company=company1, estimated_completion=timezone.now().date(), status=Deal.Status.PENDING)
+        deal2 = Deal.objects.create(name="Deal B", customer=user2, company=company2, estimated_completion=timezone.now().date(), status=Deal.Status.IN_PROGRESS)
 
         # Create Parts
-        parts = []
-        for order in orders:
-            for _ in range(random.randint(1, 3)):
-                part_type = random.choice(part_types)
-                step_choices = [step for step in steps if step.part_model == part_type]
-                assigned_emp = random.choice(users + [None])  # Allow unassigned parts
+        part1 = Part.objects.create(name="Gizmo Part A", part_type=part_type1, step=steps[0], assigned_emp=user1, customer=user1, deal=deal1, estimated_completion=timezone.now().date(), status=Part.Status.PENDING)
+        part2 = Part.objects.create(name="Widget Part B", part_type=part_type2, step=steps[2], assigned_emp=user2, customer=user2, deal=deal2, estimated_completion=timezone.now().date(), status=Part.Status.IN_PROGRESS)
 
-                part = Part(
-                    name=f"{part_type.name} Part",
-                    part_type=part_type,
-                    step=random.choice(step_choices) if step_choices else None,
-                    is_complete=random.choice([True, False]),
-                    assigned_emp=assigned_emp,
-                    customer=order.customer,
-                    order=order,
-                    estimated_completion=date.today() + timedelta(days=random.randint(1, 15))
-                )
-                parts.append(part)
+        # Create Deal Items
+        DealItem.objects.create(deal=deal1, part=part1)
+        DealItem.objects.create(deal=deal2, part=part2)
 
-        Part.objects.bulk_create(parts)
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(parts)} parts"))
+        # Create Equipment
+        equipment1 = Equipment.objects.create(equipmentType=Equipment.EquipmentType.ASSEMBLER)
+        equipment2 = Equipment.objects.create(equipmentType=Equipment.EquipmentType.Unassigned)
 
-        # Create Order Items
-        order_items = [
-            OrderItem(order=random.choice(orders), part=part)
-            for part in parts
-        ]
-        OrderItem.objects.bulk_create(order_items)
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(order_items)} order items"))
+        # Assign Equipment to Steps
+        EquipmentUsed.objects.create(equipment=equipment1, step=steps[0], part=part1)
+        EquipmentUsed.objects.create(equipment=equipment2, step=steps[2], part=part2)
 
-        # Create PartDocs
-        part_docs = list(PartDoc.objects.bulk_create([
-            PartDoc(
-                is_image=random.choice([True, False]),
-                part_step=random.randint(1, 3),
-                file_name=f"doc_{i}.pdf",
-                file="parts_docs/dummy.pdf",
-                uploader=random.choice(users + [None]),  # Allow null uploader
-                part_type=random.choice(part_types)
-            ) for i in range(5)
-        ]))
-        self.stdout.write(self.style.SUCCESS(f"✅ Created {len(part_docs)} part docs"))
-
-        self.stdout.write(self.style.SUCCESS("🎉 Test data successfully populated!"))
+        self.stdout.write(self.style.SUCCESS("Database successfully populated with sample data!"))

@@ -11,6 +11,9 @@
             {% else %} status-pending {% endif %}">
         </span>
     </p>
+    <p>{{ current_step.description }}</p>
+    <p>{{ customer.first_name}} {{customer.last_name }}</p>
+    <p>{{ company.name }}</p>
 
     <a href="{% url 'tracker' %}">Back to List</a>
 </div>

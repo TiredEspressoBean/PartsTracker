@@ -20,6 +20,7 @@ from django.urls import path
 from django.urls.conf import include
 
 from Tracker import views
+from Tracker.views import GenericCreateEntry
 
 urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
@@ -27,13 +28,18 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('tracker/', views.tracker, name='tracker'),
     path('part_view/<int:part_id>/', views.part_view, name='part_view'),
-    path('order_view/<int:order_id>/', views.order_view, name='order_view'),
+    path('deal_view/<int:deal_id>/', views.deal_view, name='deal_view'),
     path('edit_part/<int:part_id>/', views.edit_part, name='edit_part'),
-    path('edit_order/<int:order_id>/', views.edit_order, name='edit_order'),
+    path('edit_deal/<int:deal_id>/', views.edit_deal, name='edit_deal'),
     path('edit/', views.edit, name='edit'),
     path('upload/', views.upload),
     path('docs/<int:doc_id>', views.docs, name='docs'),
+
     path("accounts/", include("allauth.urls")),
+
+    path("create/", views.create_page, name='create_page'),
+
+    path("create/<str:model_name>", GenericCreateEntry.as_view(), name="create_entry"),
 ]
 # TODO: Add docs paths: Docs - for all docs, Doc/part_id for docs related to that part
 

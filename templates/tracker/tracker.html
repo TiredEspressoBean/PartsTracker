@@ -4,12 +4,12 @@
 {% block content %}
 
     <div class="container">
-        {% if orders %}
-            {% for order in orders %}
-                <a class="card-link" href="{% url 'order_view' order.id %}">
+        {% if deals %}
+            {% for deal in deals %}
+                <a class="card-link" href="{% url 'deal_view' deal.id %}">
                     <div class="card-content">
-                        <h3>{{ order.name }}</h3>
-                        <p>Estimated Completion: {{ order.estimated_completion }}</p>
+                        <h3>{{ deal.name }}</h3>
+                        <p>Estimated Completion: {{ deal.estimated_completion }}</p>
 
                         <span class="status-indicator 
                         {% if part.is_complete %} status-complete 

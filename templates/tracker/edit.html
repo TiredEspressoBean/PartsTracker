@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container">
-    <h1>Edit Parts & Orders</h1>
+    <h1>Edit Parts & deals</h1>
 
     <h2>Parts</h2>
     <table class="table">
@@ -22,8 +22,8 @@
             {% for part in parts %}
             <tr>
                 <td>{{ part.id }}</td>
-                <td>{{ part.customer.company }}</td>
-                <td>{{ part.customer }}</td>
+                <td>{{ part.customer.parent_company.name }}</td>
+                <td>{{ part.customer.first_name }} {{ part.customer.last_name }}</td>
                 <td>{{ part.name }}</td>
                 {% if part.is_complete %}
                 <td>Completed</td>
@@ -39,7 +39,7 @@
         </tbody>
     </table>
 
-    <h2>Orders</h2>
+    <h2>deals</h2>
     <table class="table">
         <thead>
             <tr>
@@ -51,18 +51,18 @@
             </tr>
         </thead>
         <tbody>
-            {% for order in orders %}
+            {% for deal in deals %}
             <tr>
-                <td>{{ order.id }}</td>
-                <td>{{ order.customer.company }}</td>
-                <td>{{ order.customer }}</td>
-                {% if order.is_complete %}
+                <td>{{ deal.id }}</td>
+                <td>{{ deal.company.name }}</td>
+                <td>{{ deal.customer.first_name }} {{ deal.customer.last_name }}</td>
+                {% if deal.is_complete %}
                     <td>Not complete</td>
                 {% else %}
                     <td>Complete</td>
                 {% endif %}
                 <td>
-                    <a href="{% url 'edit_order' order.id %}" class="btn">Edit</a>
+                    <a href="{% url 'edit_deal' deal.id %}" class="btn">Edit</a>
 {#                    Delete Button #}
                 </td>
             </tr>

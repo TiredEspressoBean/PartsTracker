@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{##}
+
+{% block content %}
+<div class="container">
+    <h2>{{ deal.name }}</h2>
+    <p>Status: 
+        <span class="status-indicator 
+            {% if deal.is_complete %} status-complete 
+            {% elif deal.is_in_progress %} status-in-progress 
+            {% else %} status-pending {% endif %}">
+        </span>
+    </p>
+    <label>Customer:</label>
+    <p>{{ deal.customer.first_name }} {{ deal.customer.last_name }}</p>
+    <label>Company:</label>
+    <p>{{ deal.customer.parent_company.name }}</p>
+    <label>Estimated Completion:</label>
+    <p>{{ deal.estimated_completion }}</p>
+    <label>Parts Associated with this Deal</label>
+    {% if deal_parts %}
+        {% for part in deal_parts %}
+            <div>
+            <a href="/part_view/{{ part.id }}">{{ part.id }} : {{ part.name }}</a>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div>
+    <a href="{% url 'tracker' %}">Back to List</a>
+    </div>
+</div>
+{% endblock %}

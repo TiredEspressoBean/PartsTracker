@@ -6,43 +6,73 @@
     <title>Orders Tracker</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://kit.fontawesome.com/YOUR_FONT_AWESOME_KIT.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<!-- Navigation Bar -->
-<div class="topnav">
-    <div>
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'tracker' %}">Tracker</a>
+<!-- Sidebar -->
+<div class="sidebar">
+    <ul>
+        <li>
+            <a href="{% url 'home' %}">
+                <i class="fas fa-home"></i>
+                <span class="menu-text">Home</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'tracker' %}">
+                <i class="fas fa-box"></i>
+                <span class="menu-text">Tracker</span>
+            </a>
+        </li>
         {% if user.is_staff %}
-            <a href="{% url 'edit' %}">Edits</a>
-{#            <a href="{% url 'Docs' %}">Docs</a>#}
+        <li>
+            <a href="{% url 'edit' %}">
+                <i class="fas fa-edit"></i>
+                <span class="menu-text">Edits</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'create_page' %}">
+                <i class="fas fa-plus-circle"></i>
+                <span class="menu-text">Create</span>
+            </a>
+        </li>
         {% endif %}
-    </div>
-    <div>
-        {% if user.is_authenticated %}
-            <div class="logout_div">
-            <form id="logout-form" action="{% url 'logout' %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="logout-button">
-                    Logout
-                </button>
-            </form>
-            </div>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a>
-        {% endif %}
-    </div>
+    </ul>
 </div>
 
 <!-- Main Content -->
-{% block content %}{% endblock %}
+<div class="main-content">
+    <div class="topnav">
+        <div>
+            <button id="menu-toggle">&#9776;</button>
+        </div>
+        <div>
+            {% if user.is_authenticated %}
+                <form id="logout-form" action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </div>
+    </div>
 
+    {% block content %}{% endblock %}
+</div>
 
 <!-- Footer -->
 <div class="footer">
     &copy; 2025 Factory Orders Tracker. All Rights Reserved.
 </div>
+
+<script>
+    document.getElementById("menu-toggle").addEventListener("click", function() {
+        document.querySelector(".sidebar").classList.toggle("expanded");
+    });
+</script>
 
 </body>
 </html>

@@ -2,27 +2,36 @@
 
 {% block content %}
     <div class="container">
-        <h1>Edit Order</h1>
+        <h1>Edit Deal</h1>
 
         <form method="POST">
             {% csrf_token %}
-
-            <label for="order_id">Order ID:</label>
-            <input type="text" id="order_id" name="order_id" value="{{ order.id }}" readonly>
+            <label for="deal_name">Deal Name:</label>
+            <input type="text" id="deal_id" name="deal_id" value="{{ deal.name }}">
+            <label for="deal_id">Deal ID:</label>
+            <input type="text" id="deal_id" name="deal_id" value="{{ deal.id }}" readonly>
 
             <label for="customer">Customer:</label>
             <select id="customer" name="customer">
                 {% for cust in customers %}
-                    <option value="{{ cust.id }}" {% if order.customer.id == cust.id %}selected{% endif %}>
-                        {{ cust.company }} - {{ cust.username }}
+                    <option value="{{ cust.id }}" {% if deal.customer.id == cust.id %}selected{% endif %}>
+                        {{ cust.username }}
+                    </option>
+                {% endfor %}
+            </select>
+            <label for=company">Company: </label>
+            <select id="company" name="customer">
+                {% for company in companies %}
+                    <option value="{{ company.name }}" {% if deal.customer.parent_company == company.id %}selected{% endif %}>
+                        {{ company.name }}
                     </option>
                 {% endfor %}
             </select>
         
-            <label for="status">Order Status:</label>
+            <label for="status">deal Status:</label>
             <select id="status" name="status">
                 {% for s in statuses %}
-                    <option value="{{ s.id }}" {% if order.status.id == s.id %}selected{% endif %}>
+                    <option value="{{ s.id }}" {% if deal.status.id == s.id %}selected{% endif %}>
                         {{ s.status }}
                     </option>
                 {% endfor %}
@@ -30,14 +39,14 @@
 
             <label for="estimated_delivery">Estimated Delivery Date:</label>
             <input type="date" id="estimated_delivery" name="estimated_delivery"
-                   value="{{ order.estimated_completion|date:'Y-m-d' }}">
+                   value="{{ deal.estimated_completion|date:'Y-m-d' }}">
 
-            <h2>Order Items</h2>
-            <div id="order-items">
-                {% for item in order.orderitem_set.all %}
-                    <div class="order-item">
+            <h2>Deal Items</h2>
+            <div id="deal-items">
+                {% for item in deal.dealitem_set.all %}
+                    <div class="deal-item">
                         <label>Part:</label>
-                        <select name="order_items-{{ forloop.counter }}">
+                        <select name="deal_items-{{ forloop.counter }}">
                             {% for part in parts %}
                                 <option value="{{ part.id }}" {% if item.part.id == part.id %}selected{% endif %}>
                                     {{ part.id }} {{ part.name }} - {{ part.part_type.name }}
@@ -60,14 +69,14 @@
 
     <script>
         document.getElementById("add-item").addEventListener("click", function () {
-            let container = document.getElementById("order-items");
+            let container = document.getElementById("deal-items");
             let index = container.children.length + 1;
 
             let newItem = document.createElement("div");
-            newItem.classList.add("order-item");
+            newItem.classList.add("deal-item");
             newItem.innerHTML = `
             <label>Part:</label>
-            <select name="order_items-${index}">
+            <select name="deal_items-${index}">
                 {% for part in parts %}
                     <option value="{{ part.id }}">{{ part.name }} - {{ part.part_type.name }}</option>
                 {% endfor %}

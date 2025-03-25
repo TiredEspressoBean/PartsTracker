@@ -57,6 +57,14 @@
             {% endfor %}
         </select>
 
+        <label for="comapny">Company</label>
+        <select id="comapny" name = "company">
+            {% for company in companies %}
+                <option value = "{{ company.id }}" {% if part.parent_company.id == company.id %} selected {% endif %}>
+                    {{ company.name }}
+                </option>
+            {% endfor %}
+        </select>
         <label for="order">Order:</label>
         <select id="order" name="order">
             {% for o in orders %}
