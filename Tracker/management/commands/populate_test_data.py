@@ -1,52 +1,155 @@
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from Tracker.models import Companies, User, PartType, Step, Deal, Part, DealItem, Equipment, EquipmentUsed
+from django.contrib.auth.models import Group
+from Tracker.models import Companies, User, Part, PartType, Deal, Step, DealItem, PartDoc, Equipment, EquipmentUsed, QualityErrorsList, ErrorReport, QualityErrorsOnParts
 import random
+from faker import Faker
+from datetime import timedelta, datetime
+from django.utils import timezone
+from django.core.files.base import ContentFile
+import io
 
 class Command(BaseCommand):
-    help = "Populate the database with sample data"
+    help = "Generate sample data for development"
 
     def handle(self, *args, **kwargs):
-        # Create Companies
-        company1 = Companies.objects.create(name="TechCorp", description="A leading tech manufacturer.")
-        company2 = Companies.objects.create(name="MechaWorks", description="Experts in mechanical parts.")
+        fake = Faker()
 
-        # Create Users
-        user1 = User.objects.create(username="john_doe", email="john@example.com", parent_company=company1)
-        user2 = User.objects.create(username="jane_smith", email="jane@example.com", parent_company=company2)
+        # Create groups
+        employees_group, _ = Group.objects.get_or_create(name='employee')
+        customers_group, _ = Group.objects.get_or_create(name='customer')
 
-        # Create Part Types
-        part_type1 = PartType.objects.create(name="Gizmo", num_steps=3)
-        part_type2 = PartType.objects.create(name="Widget", num_steps=4)
+        # Create companies
+        companies = [
+            Companies.objects.create(
+                name=fake.company(),
+                description=fake.catch_phrase(),
+                hubspot_api_id=f"HS_COMP_{i}"
+            ) for i in range(5)
+        ]
 
-        # Create Steps
-        steps = []
-        for i in range(1, 4):
-            step = Step.objects.create(step=i, description=f"Step {i} for Gizmo", part_model=part_type1, completion_time=timezone.now().time())
-            steps.append(step)
+        # Create users
+        employees, customers = [], []
+        for _ in range(5):
+            emp = User.objects.create_user(
+                username=fake.user_name(),
+                password="password",
+                email=fake.company_email(),
+                parent_company=random.choice(companies)
+            )
+            emp.groups.add(employees_group)
+            employees.append(emp)
 
-        for i in range(1, 5):
-            step = Step.objects.create(step=i, description=f"Step {i} for Widget", part_model=part_type2, completion_time=timezone.now().time())
-            steps.append(step)
+            cust = User.objects.create_user(
+                username=fake.user_name(),
+                password="password",
+                email=fake.email(),
+                parent_company=random.choice(companies)
+            )
+            cust.groups.add(customers_group)
+            customers.append(cust)
 
-        # Create Deals
-        deal1 = Deal.objects.create(name="Deal A", customer=user1, company=company1, estimated_completion=timezone.now().date(), status=Deal.Status.PENDING)
-        deal2 = Deal.objects.create(name="Deal B", customer=user2, company=company2, estimated_completion=timezone.now().date(), status=Deal.Status.IN_PROGRESS)
-
-        # Create Parts
-        part1 = Part.objects.create(name="Gizmo Part A", part_type=part_type1, step=steps[0], assigned_emp=user1, customer=user1, deal=deal1, estimated_completion=timezone.now().date(), status=Part.Status.PENDING)
-        part2 = Part.objects.create(name="Widget Part B", part_type=part_type2, step=steps[2], assigned_emp=user2, customer=user2, deal=deal2, estimated_completion=timezone.now().date(), status=Part.Status.IN_PROGRESS)
-
-        # Create Deal Items
-        DealItem.objects.create(deal=deal1, part=part1)
-        DealItem.objects.create(deal=deal2, part=part2)
+        # Create PartTypes and Steps
+        part_types = []
+        for _ in range(5):
+            pt = PartType.objects.create(
+                name=fake.word().capitalize() + " Type",
+                num_steps=random.randint(3, 6),
+                remanufactured=random.choice([True, False])
+            )
+            for step_num in range(pt.num_steps):
+                Step.objects.create(
+                    step=step_num,
+                    description=fake.sentence(),
+                    part_model=pt,
+                    completion_time=(datetime.min + timedelta(minutes=random.randint(5, 60))).time(),
+                    is_last_step=(step_num == pt.num_steps - 1)
+                )
+            part_types.append(pt)
 
         # Create Equipment
-        equipment1 = Equipment.objects.create(equipmentType=Equipment.EquipmentType.ASSEMBLER)
-        equipment2 = Equipment.objects.create(equipmentType=Equipment.EquipmentType.Unassigned)
+        equipment_list = [
+            Equipment.objects.create(
+                name=fake.word().capitalize(),
+                equipmentType=random.choice(Equipment.EquipmentType.values)
+            ) for _ in range(5)
+        ]
 
-        # Assign Equipment to Steps
-        EquipmentUsed.objects.create(equipment=equipment1, step=steps[0], part=part1)
-        EquipmentUsed.objects.create(equipment=equipment2, step=steps[2], part=part2)
+        # Create Deals
+        deals = [
+            Deal.objects.create(
+                name=fake.bs().capitalize(),
+                customer=random.choice(customers),
+                company=random.choice(companies),
+                estimated_completion=fake.future_date(),
+                status=random.choice(Deal.Status.values),
+                hubspot_api_id=f"HS_DEAL_{i}",
+                current_hubspot_gate=fake.word().upper(),
+                archived=False
+            ) for i in range(5)
+        ]
 
-        self.stdout.write(self.style.SUCCESS("Database successfully populated with sample data!"))
+        # Create Parts and related data
+        for _ in range(10):
+            pt = random.choice(part_types)
+            deal = random.choice(deals)
+            steps = Step.objects.filter(part_model=pt).order_by('step')
+            step = steps.first() if steps else None
+            assigned_emp = random.choice(employees)
+            customer = random.choice(customers)
+
+            part = Part.objects.create(
+                name=fake.word().capitalize() + " Part",
+                glovia_id=fake.uuid4()[:8].upper(),
+                part_type=pt,
+                step=step,
+                assigned_emp=assigned_emp,
+                customer=customer,
+                deal=deal,
+                estimated_completion=fake.future_date(),
+                status=random.choice(Part.Status.values),
+                archived=False
+            )
+
+            # DealItem
+            DealItem.objects.create(deal=deal, part=part)
+
+            # PartDoc
+            PartDoc.objects.create(
+                is_image=random.choice([True, False]),
+                part_step=step.step if step else 0,
+                file_name="example.txt",
+                file=ContentFile(b"Sample file content.", name="example.txt"),
+                uploaded_by=assigned_emp,
+                part_type=pt
+            )
+
+            # EquipmentUsed
+            EquipmentUsed.objects.create(
+                equipment=random.choice(equipment_list),
+                step=step,
+                part=part
+            )
+
+            # ErrorReport
+            error_report = ErrorReport.objects.create(
+                part=part,
+                machine=random.choice(equipment_list),
+                operator=assigned_emp,
+                description=fake.text(max_nb_chars=300)
+            )
+
+            # QualityErrorsList
+            error_type = QualityErrorsList.objects.create(
+                error_name=fake.catch_phrase(),
+                error_example=fake.sentence(),
+                part_type=pt
+            )
+
+            # QualityErrorsOnParts
+            QualityErrorsOnParts.objects.create(
+                error_id=error_type,
+                part_with_error=part,
+                error_report=error_report
+            )
+
+        self.stdout.write(self.style.SUCCESS("✅ Successfully generated realistic sample data."))

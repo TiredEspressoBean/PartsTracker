@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg">
+    <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        
+        <div>
+            <label for="machine" class="block text-sm font-medium text-gray-700">Machine</label>
+            <select id="machine" name="machine" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                {% for machine in machines %}
+                    <option value="{{ machine.id }}">{{ machine.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label for="operator" class="block text-sm font-medium text-gray-700">Last Operator</label>
+            <select id="operator" name="operator" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                {% for employee in employees %}
+                    <option value="{{ employee.id }}">
+                       {{ employee.username }} {{ employee.first_name }} {{ employee.last_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label for="description" class="block text-sm font-medium text-gray-700">Short description</label>
+            <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" maxlength="300" placeholder="Please use for descriptions of 300 characters or less (Aka about the length of a tweet.)"></textarea>
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Document File</label>
+            <input type="file" name="file" class="mt-1 block w-full text-gray-700 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Error Type(s)</label>
+            <div class="mt-2 space-y-2">
+                {% for type in error_types %}
+                    <div class="flex items-center">
+                        <input id="error_{{ forloop.index }}" name="errors" type="checkbox" value="{{ type }}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="error_{{ forloop.index }}" class="ml-2 text-gray-700">{{ type }}</label>
+                    </div>
+                {% endfor %}
+                <div class="flex items-center">
+                    <input id="error_other" name="errors" type="checkbox" value="Other" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" onclick="toggleOtherErrorInput()">
+                    <label for="error_other" class="ml-2 text-gray-700">Other</label>
+                </div>
+                <input type="text" id="other_error_input" name="other_error" class="mt-2 hidden w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Specify other error type">
+            </div>
+        </div>
+        
+        <div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Submit
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleOtherErrorInput() {
+        const otherErrorCheckbox = document.getElementById('error_other');
+        const otherErrorInput = document.getElementById('other_error_input');
+        if (otherErrorCheckbox.checked) {
+            otherErrorInput.classList.remove('hidden');
+        } else {
+            otherErrorInput.classList.add('hidden');
+        }
+    }
+</script>
+
+{% endblock %}

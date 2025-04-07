@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-*#*t$+%i720l19h8#l#c+zmh*=*bsoj63$6!f&_*1llj!c*5ve
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.99.111", "localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.microsoft",
-    'Tracker'
+    'Tracker',
+    "tailwind",
+    "theme",
+    "django_browser_reload"
 ]
 
 MIDDLEWARE = [
@@ -53,7 +56,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "allauth.account.middleware.AccountMiddleware"
+    "allauth.account.middleware.AccountMiddleware",
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = 'PizzaTrackerAmbac.urls'
@@ -163,7 +167,13 @@ load_dotenv()
 
 HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY")
 
+TAILWIND_APP_NAME = 'theme'
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 # TODO: Only use once ready for production
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

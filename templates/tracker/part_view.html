@@ -1,20 +1,32 @@
 {% extends "base.html" %}
 
+{# TODO: We can add more information here#}
+
 {% block content %}
-<div class="container">
-    <h2>{{ part.name }}</h2>
-    <p>Estimated Completion: {{ part.estimated_completion }}</p>
-    <p>Status: 
-        <span class="status-indicator 
-            {% if part.is_complete %} status-complete 
-            {% elif part.is_in_progress %} status-in-progress 
-            {% else %} status-pending {% endif %}">
+<div class="container mx-auto p-6 bg-white shadow-md rounded-lg max-w-2xl">
+    <h2 class="text-2xl font-bold text-gray-900">{{ part.name }}</h2>
+    <p class="text-gray-700 mt-2"><strong>Estimated Completion:</strong> {{ part.estimated_completion }}</p>
+    
+    <p class="mt-2 text-gray-700"><strong>Status:</strong> 
+        <span class="px-3 py-1 rounded text-white 
+            {% if part.is_complete %} bg-green-500 
+            {% elif part.is_in_progress %} bg-yellow-500 
+            {% else %} bg-red-500 {% endif %}">
+            {{ part.get_status_display }}
         </span>
     </p>
-    <p>{{ current_step.description }}</p>
-    <p>{{ customer.first_name}} {{customer.last_name }}</p>
-    <p>{{ company.name }}</p>
 
-    <a href="{% url 'tracker' %}">Back to List</a>
+    <p class="mt-4 text-gray-700">{{ current_step.description }}</p>
+
+    <div class="mt-4 text-gray-700">
+        <p><strong>Customer:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
+        <p><strong>Company:</strong> {{ company.name }}</p>
+    </div>
+
+    <div class="mt-6">
+        <a href="{% url 'tracker' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+            Back to List
+        </a>
+    </div>
 </div>
 {% endblock %}

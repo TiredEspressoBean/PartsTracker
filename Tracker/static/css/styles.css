@@ -10,7 +10,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 60px;
+    width: 60upx;
     background-color: #333;
     color: white;
     height: 100%;

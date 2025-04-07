@@ -3,44 +3,86 @@
 
 {% block content %}
 
-    <div class="container">
-        {% if deals %}
-            {% for deal in deals %}
-                <a class="card-link" href="{% url 'deal_view' deal.id %}">
-                    <div class="card-content">
-                        <h3>{{ deal.name }}</h3>
-                        <p>Estimated Completion: {{ deal.estimated_completion }}</p>
+<div class="mx-auto">
+    {% if deals %}
+        <h2 class="text-lg font-semibold mb-2">Deals</h2>
+        <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
+            <table class="min-w-full border border-gray-300 mb-6">
+                <thead>
+                    <tr class="bg-gray-100 text-left">
+                        <th class="p-3 cursor-pointer" onclick="sortTable(0, 'deals-table')">Name</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(1, 'deals-table')">Estimated Completion</th>
+                        <th class="p-3 cursor-pointer">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="deals-table">
+                    {% for deal in deals %}
+                        <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
+                            <td class="p-2"><a href="{% url 'deal_view' deal.id %}" class="text-blue-600 hover:underline">{{ deal.name }}</a></td>
+                            <td class="p-2">{{ deal.estimated_completion }}</td>
+                            <td class="p-2">
+                            
+{#                            TODO: Review this aspect of the UI#}
+                                <span class="px-2 py-1 rounded text-white 
+                                    {% if deal.get_status_display == "Completed" %} bg-green-500 
+                                    {% elif deal.get_status_display == "Pending" %} bg-yellow-500 
+                                    {% else %} bg-red-500 {% endif %}">
+                                    {{ deal.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+    
+    {% if parts %}
+        <h2 class="text-lg font-semibold mt-6 mb-2">Parts</h2>
+        <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
+            <table class="min-w-full border border-gray-300 mb-6">
+                <thead>
+                    <tr class="bg-gray-100 text-left">
+                        <th class="p-3 cursor-pointer" onclick="sortTable(0, 'parts-table')">Name</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(1, 'parts-table')">Estimated Completion</th>
+                        <th class="p-3 cursor-pointer">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="parts-table">
+                    {% for part in parts %}
+                        <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
+                            <td class="p-2"><a href="{% url 'part_view' part.id %}" class="text-blue-600 hover:underline">{{ part.name }}</a></td>
+                            <td class="p-2">{{ part.estimated_completion }}</td>
+                            <td class="p-2">
+                                <span class="px-2 py-1 rounded text-white 
+                                    {% if part.get_status_display == "Completed" %} bg-green-500 
+                                    {% elif part.get_status_display == "In progress" %} bg-yellow-500 
+                                    {% else %} bg-red-500 {% endif %}">
+                                    {{ part.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-red-500">Sorry, you have no associated products. Please make sure you are logged in.</p>
+    {% endif %}
+</div>
 
-                        <span class="status-indicator 
-                        {% if part.is_complete %} status-complete 
-                        {% elif part.is_in_progress %} status-in-progress 
-                        {% else %} status-pending {% endif %}">
-                    </span>
-                    </div>
-                </a>
-            {% endfor %}
-        {% endif %}
-        {% if parts %}
+<script>
+    function sortTable(columnIndex, tableId) {
+        let table = document.getElementById(tableId);
+        let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
+        let sortedRows = rows.sort((a, b) => {
+            let aText = a.cells[columnIndex].innerText.trim();
+            let bText = b.cells[columnIndex].innerText.trim();
+            return aText.localeCompare(bText, undefined, { numeric: true });
+        });
+        sortedRows.forEach(row => table.appendChild(row));
+    }
+</script>
 
-            {% for part in parts %}
-                <a class="card-link" href="{% url 'part_view' part.id %}">
-                    <div class="card-content">
-                        <h3>{{ part.name }}</h3>
-                        <p>Estimated Completion: {{ part.estimated_completion }}</p>
-
-                        <span class="status-indicator 
-                        {% if part.is_complete %} status-complete 
-                        {% elif part.is_in_progress %} status-in-progress 
-                        {% else %} status-pending {% endif %}">
-                    </span>
-                    </div>
-                </a>
-            {% endfor %}
-        {% else %}
-            <p>
-                Sorry you have no associated products, please make sure you are logged in.
-            </p>
-        {% endif %}
-    </div>
 
 {% endblock %}

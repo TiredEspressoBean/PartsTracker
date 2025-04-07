@@ -20,11 +20,14 @@ from django.urls import path
 from django.urls.conf import include
 
 from Tracker import views
-from Tracker.views import GenericCreateEntry
+from Tracker.views import GenericCreateEntry, GenericUpdateEntry, GenericDeleteEntry, GenericViewEntry
 
 urlpatterns = [
+
+    path("__reload__/", include("django_browser_reload.urls")),
+
     path("accounts/", include("django.contrib.auth.urls")),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     path('', views.home, name='home'),
     path('tracker/', views.tracker, name='tracker'),
     path('part_view/<int:part_id>/', views.part_view, name='part_view'),
@@ -33,13 +36,30 @@ urlpatterns = [
     path('edit_deal/<int:deal_id>/', views.edit_deal, name='edit_deal'),
     path('edit/', views.edit, name='edit'),
     path('upload/', views.upload),
-    path('docs/<int:doc_id>', views.docs, name='docs'),
+    path('docs', views.docs, name='docs'),
+    path('docs/<int:doc_id>', views.single_doc, name='docs'),
 
     path("accounts/", include("allauth.urls")),
 
     path("create/", views.create_page, name='create_page'),
 
     path("create/<str:model_name>", GenericCreateEntry.as_view(), name="create_entry"),
+
+    path("update/<str:model_name>/<int:pk>", GenericUpdateEntry.as_view(), name="update_entry"),
+
+    path("delete/<str:model_name>", GenericDeleteEntry.as_view(), name="delete_entry"),
+
+    path("view/<str:model_name>/<int:pk>", GenericViewEntry.as_view(), name="view_entry"),
+
+    path("QA", views.qa_page.as_view(), name="QA"),
+
+    path("error_form/<int:part_id>", views.error_form, name="error_form"),
+
+    path("bulk_add/<int:deal_id>", views.bulk_add_parts, name="bulk_add_parts"),
+
+    path("bulk_operations", views.bulk_operations, name="bulk_operations"),
+
+    path("bulk_edit/<int:deal_id>", views.bulk_edit, name="bulk_edit"),
 ]
 # TODO: Add docs paths: Docs - for all docs, Doc/part_id for docs related to that part
 

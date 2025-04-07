@@ -3,7 +3,7 @@ from django.conf import settings
 
 API_KEY = settings.HUBSPOT_API_KEY
 
-HUBSPOT_API_BASE_URL = 'https://api.hubapi.com/crm/v3'
+HUBSPOT_API_BASE_URL = 'https://api.hubapi.com/crm/'
 HEADERS = {
     "Authorization": "Bearer " + settings.HUBSPOT_API_KEY,
     "Content-Type": "application/json",
@@ -14,7 +14,7 @@ def get_all_deals():
     params = {"limit": 100, "archived": "false"}
 
     while True:
-        deal_url = HUBSPOT_API_BASE_URL + "/objects/deals"
+        deal_url = HUBSPOT_API_BASE_URL + "v4/objects/deals"
         response = requests.get(deal_url, headers=HEADERS, params=params)
 
         if response.status_code != 200:
@@ -32,26 +32,134 @@ def get_all_deals():
     return all_deals_data
 
 
-def get_companies_from_deal_id(deal_ids):
-    companies_data = []
-    for deal_id in deal_ids:
-        company_assoc_url = HUBSPOT_API_BASE_URL + "/associations/Deals/Companies/batch/read"
-        response = requests.get(company_assoc_url, headers=HEADERS, params={"inputs": [{"id": deal_id}]})
-        if response.status_code != 200:
-            print(f"Error: {response.status_code}: {response.text}")
-        else:
-            data = response.json()
-            companies_data.extend(data.get("results", []))
-    return companies_data
+def get_company_ids_from_deal_id(deal_ids):
+    """Fetch associated companies for a list of deal IDs using HubSpot API batch requests."""
+    if not deal_ids:
+        return []
+
+    url = f"{HUBSPOT_API_BASE_URL}v4/associations/deals/companies/batch/read"
+
+    payload = {"inputs": [{"id": deal_id} for deal_id in deal_ids]}
+
+    try:
+        response = requests.post(url, headers=HEADERS, json=payload)
+        response.raise_for_status()  # Raises an error for HTTP status codes 4xx/5xx
+        json_response = response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching company associations: {e}")
+        return []
+
+    deal_id_to_company_id = {}
+
+    for result in json_response.get("results", []):
+        deal_id = result['from']['id']
+        company_ids = []
+        for company in result['to']:
+            company_ids.append(company['toObjectId'])
+        deal_id_to_company_id[deal_id] = company_ids
+
+    return deal_id_to_company_id
+
 
 def get_contacts_from_deal_id(deal_ids):
-    contacts_data = []
+    if not deal_ids:
+        return []
+
+    url = f"{HUBSPOT_API_BASE_URL}v4/associations/deals/contacts/batch/read"
+
+    payload = {"inputs": [{"id": deal_id} for deal_id in deal_ids]}
+
+    try:
+        response = requests.post(url, headers=HEADERS, json=payload)
+        response.raise_for_status()
+        json_response = response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching contact associations: {e}")
+        return []
+
+    deal_id_to_contact_id = {}
+
+    for result in json_response.get("results", []):
+        deal_id = result['from']['id']
+        contact_ids = []
+        for contact in result['to']:
+            contact_ids.append(contact['toObjectId'])
+        deal_id_to_contact_id[deal_id] = contact_ids
+
+    return deal_id_to_contact_id
+
+
+def extract_ids(deal_to_other_ids):
+    if not deal_to_other_ids:
+        return []
+    deal_ids = deal_to_other_ids.keys()
+    key_list = []
     for deal_id in deal_ids:
-        contacts_assoc_url = HUBSPOT_API_BASE_URL + "/associations/Deals/Contacts/batch/read"
-        response = requests.get(contacts_assoc_url, headers=HEADERS, params={"inputs": [{"id":deal_id}]})
-        if response.status_code != 200:
-            print(f"Error: {response.status_code}: {response.text}")
-        else:
-            data = response.json()
-            contacts_data.extend(data.get("results", []))
+        key_list.extend(deal_to_other_ids[deal_id])
+    return key_list
+
+
+def get_company_info_from_company_ids(company_ids):
+    if not company_ids:
+        return
+
+    companies_set = set(company_ids)
+
+    url = f"{HUBSPOT_API_BASE_URL}v3/objects/companies/batch/read"
+
+    payload = {
+        "properties": [
+            "name",
+            "description",
+        ],
+        "inputs": [{"id": company_id} for company_id in company_ids],
+    }
+
+    companies_data = {}
+
+    response = requests.post(url, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    json_response = response.json()
+
+    for result in json_response["results"]:
+        companies_data[result["id"]] = {
+            "name": result['properties']["name"],
+            "description": result['properties']['description'],
+        }
+
+    return companies_data
+
+
+def get_contact_info_from_contact_ids(contact_ids):
+    if not contact_ids:
+        return
+
+    contacts = set(contact_ids)
+
+    url = f"{HUBSPOT_API_BASE_URL}v3/objects/contacts/batch/read"
+
+    payload = {
+        "properties": [
+            "firstname",
+            "lastname",
+            "email"
+        ],
+        "inputs": [{"id": company_id} for company_id in contact_ids],
+    }
+
+    contacts_data = {}
+
+    response = requests.post(url, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    json_response = response.json()
+
+    for result in json_response["results"]:
+        contacts_data[result["id"]] = {
+            "first_name": result['properties']["firstname"],
+            "last_name": result['properties']['lastname'],
+            "email": result['properties']['email'],
+        }
+
     return contacts_data
