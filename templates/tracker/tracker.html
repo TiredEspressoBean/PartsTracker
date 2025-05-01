@@ -3,26 +3,27 @@
 
 {% block content %}
 
-<div class="mx-auto">
-    {% if deals %}
-        <h2 class="text-lg font-semibold mb-2">Deals</h2>
-        <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
-            <table class="min-w-full border border-gray-300 mb-6">
-                <thead>
+    <div class="mx-auto">
+        {% if deals %}
+            <h2 class="text-lg font-semibold mb-2">Deals</h2>
+            <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead>
                     <tr class="bg-gray-100 text-left">
                         <th class="p-3 cursor-pointer" onclick="sortTable(0, 'deals-table')">Name</th>
                         <th class="p-3 cursor-pointer" onclick="sortTable(1, 'deals-table')">Estimated Completion</th>
-                        <th class="p-3 cursor-pointer">Status</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(2, 'deals-table')">Status</th>
                     </tr>
-                </thead>
-                <tbody id="deals-table">
+                    </thead>
+                    <tbody id="deals-table">
                     {% for deal in deals %}
                         <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
-                            <td class="p-2"><a href="{% url 'deal_view' deal.id %}" class="text-blue-600 hover:underline">{{ deal.name }}</a></td>
+                            <td class="p-2"><a href="{% url 'deal_view' deal.id %}"
+                                               class="text-blue-600 hover:underline">{{ deal.name }}</a></td>
                             <td class="p-2">{{ deal.estimated_completion }}</td>
                             <td class="p-2">
-                            
-{#                            TODO: Review this aspect of the UI#}
+
+                                {#                            TODO: Review this aspect of the UI#}
                                 <span class="px-2 py-1 rounded text-white 
                                     {% if deal.get_status_display == "Completed" %} bg-green-500 
                                     {% elif deal.get_status_display == "Pending" %} bg-yellow-500 
@@ -32,26 +33,27 @@
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
-    
-    {% if parts %}
-        <h2 class="text-lg font-semibold mt-6 mb-2">Parts</h2>
-        <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
-            <table class="min-w-full border border-gray-300 mb-6">
-                <thead>
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if parts %}
+            <h2 class="text-lg font-semibold mt-6 mb-2">Parts</h2>
+            <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead>
                     <tr class="bg-gray-100 text-left">
                         <th class="p-3 cursor-pointer" onclick="sortTable(0, 'parts-table')">Name</th>
                         <th class="p-3 cursor-pointer" onclick="sortTable(1, 'parts-table')">Estimated Completion</th>
-                        <th class="p-3 cursor-pointer">Status</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(2, 'parts-table')">Status</th>
                     </tr>
-                </thead>
-                <tbody id="parts-table">
+                    </thead>
+                    <tbody id="parts-table">
                     {% for part in parts %}
                         <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
-                            <td class="p-2"><a href="{% url 'part_view' part.id %}" class="text-blue-600 hover:underline">{{ part.name }}</a></td>
+                            <td class="p-2"><a href="{% url 'part_view' part.id %}"
+                                               class="text-blue-600 hover:underline">{{ part }}</a></td>
                             <td class="p-2">{{ part.estimated_completion }}</td>
                             <td class="p-2">
                                 <span class="px-2 py-1 rounded text-white 
@@ -63,26 +65,32 @@
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="text-red-500">Sorry, you have no associated products. Please make sure you are logged in.</p>
-    {% endif %}
-</div>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center h-[70vh] text-center px-4">
+                <div class="max-w-md bg-white shadow-lg rounded-lg p-6 border border-red-200">
+                    <h2 class="text-2xl font-semibold text-red-600 mb-2">No Products Found</h2>
+                    <p class="text-gray-700 mb-4">
+                        Sorry, we couldn't find any associated products or parts for your account.
+                    </p>
 
-<script>
-    function sortTable(columnIndex, tableId) {
-        let table = document.getElementById(tableId);
-        let rows = Array.from(table.getElementsByTagName("tr")).slice(1);
-        let sortedRows = rows.sort((a, b) => {
-            let aText = a.cells[columnIndex].innerText.trim();
-            let bText = b.cells[columnIndex].innerText.trim();
-            return aText.localeCompare(bText, undefined, { numeric: true });
-        });
-        sortedRows.forEach(row => table.appendChild(row));
-    }
-</script>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'login' %}"
+                           class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                            Log in to Your Account
+                        </a>
+                    {% else %}
+                        <p class="text-sm text-gray-500">
+                            Please contact your administrator or check your order details.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% endif %}
+    </div>
 
 
 {% endblock %}

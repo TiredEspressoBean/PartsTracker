@@ -1,12 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
-from Tracker.models import Companies, User, Part, PartType, Deal, Step, DealItem, PartDoc, Equipment, EquipmentUsed, QualityErrorsList, ErrorReport, QualityErrorsOnParts
+from Tracker.models import Companies, User, PartTypes, Processes, Steps, Deals, Parts, DealItems, PartDocs, Equipments, EquipmentsUsed, QualityErrorsList, ErrorReports, QualityErrorsOnParts
 import random
 from faker import Faker
 from datetime import timedelta, datetime
 from django.utils import timezone
 from django.core.files.base import ContentFile
-import io
 
 class Command(BaseCommand):
     help = "Generate sample data for development"
@@ -31,6 +30,8 @@ class Command(BaseCommand):
         employees, customers = [], []
         for _ in range(5):
             emp = User.objects.create_user(
+                first_name=fake.first_name(),
+                last_name=fake.last_name(),
                 username=fake.user_name(),
                 password="password",
                 email=fake.company_email(),
@@ -40,6 +41,8 @@ class Command(BaseCommand):
             employees.append(emp)
 
             cust = User.objects.create_user(
+                first_name=fake.first_name(),
+                last_name=fake.last_name(),
                 username=fake.user_name(),
                 password="password",
                 email=fake.email(),
@@ -48,40 +51,53 @@ class Command(BaseCommand):
             cust.groups.add(customers_group)
             customers.append(cust)
 
-        # Create PartTypes and Steps
+        # Create PartTypes and Processes
         part_types = []
         for _ in range(5):
-            pt = PartType.objects.create(
+            pt = PartTypes.objects.create(
                 name=fake.word().capitalize() + " Type",
-                num_steps=random.randint(3, 6),
-                remanufactured=random.choice([True, False])
+                num_steps=random.randint(3, 6)
             )
-            for step_num in range(pt.num_steps):
-                Step.objects.create(
-                    step=step_num,
-                    description=fake.sentence(),
-                    part_model=pt,
-                    completion_time=(datetime.min + timedelta(minutes=random.randint(5, 60))).time(),
-                    is_last_step=(step_num == pt.num_steps - 1)
-                )
             part_types.append(pt)
+
+            # Create Processes for each PartType
+            for _ in range(random.randint(1, 3)):  # random number of processes per part type
+                Processes.objects.create(
+                    name=fake.word().capitalize(),
+                    is_remanufactured=random.choice([True, False]),
+                    part_type=pt
+                )
+
+        # Create Steps for each Process
+        for pt in part_types:
+            processes = Processes.objects.filter(part_type=pt)
+            for process in processes:
+                for step_num in range(pt.num_steps):
+                    Steps.objects.create(
+                        step=step_num,
+                        process=process,
+                        description=fake.sentence(),
+                        part_model=pt,
+                        completion_time=(datetime.min + timedelta(minutes=random.randint(5, 60))).time(),
+                        is_last_step=(step_num == pt.num_steps - 1)
+                    )
 
         # Create Equipment
         equipment_list = [
-            Equipment.objects.create(
+            Equipments.objects.create(
                 name=fake.word().capitalize(),
-                equipmentType=random.choice(Equipment.EquipmentType.values)
+                equipmentType=random.choice(Equipments.EquipmentType.values)
             ) for _ in range(5)
         ]
 
         # Create Deals
         deals = [
-            Deal.objects.create(
+            Deals.objects.create(
                 name=fake.bs().capitalize(),
                 customer=random.choice(customers),
                 company=random.choice(companies),
                 estimated_completion=fake.future_date(),
-                status=random.choice(Deal.Status.values),
+                status=random.choice(Deals.Status.values),
                 hubspot_api_id=f"HS_DEAL_{i}",
                 current_hubspot_gate=fake.word().upper(),
                 archived=False
@@ -92,12 +108,12 @@ class Command(BaseCommand):
         for _ in range(10):
             pt = random.choice(part_types)
             deal = random.choice(deals)
-            steps = Step.objects.filter(part_model=pt).order_by('step')
+            steps = Steps.objects.filter(part_model=pt).order_by('step')
             step = steps.first() if steps else None
             assigned_emp = random.choice(employees)
             customer = random.choice(customers)
 
-            part = Part.objects.create(
+            part = Parts.objects.create(
                 name=fake.word().capitalize() + " Part",
                 glovia_id=fake.uuid4()[:8].upper(),
                 part_type=pt,
@@ -106,15 +122,15 @@ class Command(BaseCommand):
                 customer=customer,
                 deal=deal,
                 estimated_completion=fake.future_date(),
-                status=random.choice(Part.Status.values),
+                status=random.choice(Parts.Status.values),
                 archived=False
             )
 
             # DealItem
-            DealItem.objects.create(deal=deal, part=part)
+            DealItems.objects.create(deal=deal, part=part)
 
             # PartDoc
-            PartDoc.objects.create(
+            PartDocs.objects.create(
                 is_image=random.choice([True, False]),
                 part_step=step.step if step else 0,
                 file_name="example.txt",
@@ -124,14 +140,14 @@ class Command(BaseCommand):
             )
 
             # EquipmentUsed
-            EquipmentUsed.objects.create(
+            EquipmentsUsed.objects.create(
                 equipment=random.choice(equipment_list),
                 step=step,
                 part=part
             )
 
             # ErrorReport
-            error_report = ErrorReport.objects.create(
+            error_report = ErrorReports.objects.create(
                 part=part,
                 machine=random.choice(equipment_list),
                 operator=assigned_emp,

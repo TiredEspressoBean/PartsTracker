@@ -1,0 +1,6 @@
+{% for part_form in parts %}
+    <div class="bg-gray-50 rounded-lg m-5 p-3 shadow">
+    <h1>Part {{ part_form.name }}</h1>
+    {{ part_form.form.as_p }}
+    </div>
+{% endfor %}

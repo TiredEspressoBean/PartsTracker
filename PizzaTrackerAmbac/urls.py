@@ -20,7 +20,9 @@ from django.urls import path
 from django.urls.conf import include
 
 from Tracker import views
-from Tracker.views import GenericCreateEntry, GenericUpdateEntry, GenericDeleteEntry, GenericViewEntry
+from Tracker.forms import DealForm
+from Tracker.generic_views import GenericCreateEntry, GenericUpdateEntry, GenericDeleteEntry, GenericViewEntry
+from Tracker.views import DealUpdateView, DealCreateView
 
 urlpatterns = [
 
@@ -43,11 +45,11 @@ urlpatterns = [
 
     path("create/", views.create_page, name='create_page'),
 
-    path("create/<str:model_name>", GenericCreateEntry.as_view(), name="create_entry"),
+    path("create/<str:model_name>", GenericCreateEntry.as_view(), name="create_page"),
 
     path("update/<str:model_name>/<int:pk>", GenericUpdateEntry.as_view(), name="update_entry"),
 
-    path("delete/<str:model_name>", GenericDeleteEntry.as_view(), name="delete_entry"),
+    path("delete/<str:model_name>/<int:pk>", GenericDeleteEntry.as_view(), name="delete_entry"),
 
     path("view/<str:model_name>/<int:pk>", GenericViewEntry.as_view(), name="view_entry"),
 
@@ -55,12 +57,44 @@ urlpatterns = [
 
     path("error_form/<int:part_id>", views.error_form, name="error_form"),
 
-    path("bulk_add/<int:deal_id>", views.bulk_add_parts, name="bulk_add_parts"),
-
     path("bulk_operations", views.bulk_operations, name="bulk_operations"),
 
-    path("bulk_edit/<int:deal_id>", views.bulk_edit, name="bulk_edit"),
+    path("bulk_edit/<int:deal_id>", views.bulk_edit_parts, name="bulk_edit"),
+
+    path("bulk_processes", views.bulk_processes, name="bulk_processes"),
+
+    path('deals/<int:deal_id>/archive/', views.archive_deal, name='archive_deal'),
+
 ]
 # TODO: Add docs paths: Docs - for all docs, Doc/part_id for docs related to that part
 
 urlpatterns += staticfiles_urlpatterns()
+
+urlpatterns += [
+    path("deals/lineitem/new/", views.add_lineitem_partial, name="add_lineitem_partial"),
+
+    path('bulk_create_parts/', views.BulkCreateParts.as_view(), name='bulk_create_parts'),
+
+    path('generated_parts', views.generated_parts_for_deals_or_create, name="generated_parts_for_deals_or_create"),
+]
+
+urlpatterns += [
+    path("deals/new/", DealCreateView.as_view(), name="deal_create"),
+    path("deals/<int:pk>/edit/", DealUpdateView.as_view(), name="deal_edit"),
+
+    path("partials/parttype_row/", views.add_parttype_partial, name="add_parttype_partial"),
+    path("partials/process_row/", views.add_process_partial, name="add_process_partial"),
+
+    path('partials/parttype_select/', views.parttype_select_partial, name='parttype_select_partial'),
+
+    path('partials/process_select/', views.process_select_partial, name='process_select_partial'),
+
+    path("partials/refresh-lineitems/", views.refresh_parttype_process_selects, name="refresh_parttype_process_selects"),
+
+
+]
+
+urlpatterns += [
+    path('docs/', views.list_part_docs, name='list_part_docs'),
+    path('docs/upload/', views.upload_part_doc, name='upload_part_doc'),
+]

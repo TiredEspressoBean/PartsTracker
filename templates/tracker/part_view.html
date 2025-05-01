@@ -16,12 +16,12 @@
         </span>
     </p>
 
-    <p class="mt-4 text-gray-700">{{ current_step.description }}</p>
-
     <div class="mt-4 text-gray-700">
         <p><strong>Customer:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
         <p><strong>Company:</strong> {{ company.name }}</p>
+        <p><strong>Archived:</strong> {{ part.archived }}</p>
     </div>
+    
 
     <div class="mt-6">
         <a href="{% url 'tracker' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">

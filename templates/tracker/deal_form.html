@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- HTMX dependency -->
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    
+    <div class="flex gap-4">
+        <!-- Left Column: Deal Form with Line Items -->
+        <div class="mx-auto p-6 bg-white shadow rounded-lg ">
+            <form method="POST" id="dealForm">
+                {% csrf_token %}
+                <h2 class="text-2xl font-bold mb-4 after:content-['*'] after:text-red-600 after:ml-2 after:text-2xl" >{{ deal.id|yesno:"Edit Deal,Create Deal" }}</h2>
+                {{ deal_form.as_div }}
+                <hr class="my-6">
+
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Parts in this Deal</h3>
+                <table id="lineItemForm" class="border text-sm mb-4">
+                    <thead>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="border px-2 py-1">Quantity</th>
+                        <th class="border px-2 py-1">Part Type</th>
+                        <th class="border px-2 py-1">Process</th>
+                        <th class="border px-2 py-1">IDs Start</th>
+                        <th class="border px-2 py-1">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="lineitemsBody"
+                           hx-get="{% url 'refresh_parttype_process_selects' %}"
+                           hx-trigger="refresh-lineitems from:body"
+                           hx-swap="innerHTML">
+                    {% for form in lineitem_formset.forms %}
+                        {% include "tracker/partials/lineitem_row.html" with form=form %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <button type="button"
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        hx-get="{% url 'add_lineitem_partial' %}"
+                        hx-target="#lineitemsBody"
+                        hx-swap="beforeend"
+                        id="addRowBtn">
+                    + Add Part Line
+                </button>
+
+                <!-- Additional Part Types and Processes Sections -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">New Part Types (if needed)</h3>
+                    <div id="newPartTypeForms" class="border rounded p-3 bg-gray-50 mb-2">
+                        {% for form in parttype_formset.forms %}
+                            {% include "tracker/partials/parttype_row.html" with form=form %}
+                        {% endfor %}
+                    </div>
+                    <button
+                            type="button"
+                            class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                            hx-get="{% url 'add_parttype_partial' %}"
+                            hx-target="#newPartTypeForms"
+                            hx-swap="beforeend">
+                        + Add New Part Type
+                    </button>
+
+                    <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-2 m-1.5">New Processes (if needed)</h3>
+                    <div id="newProcessForms" class="border rounded p-3 bg-gray-50 mb-2">
+                        {% for form in process_formset.forms %}
+                            {% include "tracker/partials/process_row.html" with form=form %}
+                        {% endfor %}
+                    </div>
+                    <button type="button"
+                            class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                            hx-get="{% url 'add_process_partial' %}"
+                            hx-target="#newProcessForms"
+                            hx-swap="beforeend">
+                        + Add New Process
+                    </button>
+                </div>
+
+                <div class="mt-6 border-t pt-4">
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                        Save Deal
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Column: Updated Content Placeholder -->
+        <div id="updatedContent"
+             hx-post="{% url 'generated_parts_for_deals_or_create' %}"
+             hx-trigger="change from:#lineItemForm"
+             hx-target="#updatedContent"
+             hx-swap="innerHTML"
+             hx-include="#lineitemsBody"
+             class="w-full bg-white rounded-lg p-3 shadow"
+        >
+            <p>Please fill out the form to see the result here.</p>
+        </div>
+    </div>
+
+    <!-- Optional: delete-row click handler -->
+    <script>
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("delete-row")) {
+                e.target.closest("tr").remove();
+            }
+        });
+        
+        document.querySelector('#lineItemForm').addEventListener('change', function() {
+    console.log('Change event triggered');
+});
+    </script>
+
+    <script>
+        // Add CSRF token to all HTMX requests automatically
+        document.addEventListener('htmx:configRequest', function (event) {
+            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            event.detail.headers['X-CSRFToken'] = csrfToken;
+        });
+    </script>
+
+{% endblock %}

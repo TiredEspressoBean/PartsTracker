@@ -1,35 +1,54 @@
 {% extends "base.html" %}
 
+{% block navbar %}
+    {% include 'tracker/QA_navbar.html' %}
+{% endblock %}
+
 {% block content %}
-<div class="mx-auto">
-    {% if deals %}
-        <h2 class="text-lg font-semibold mb-2">Deals</h2>
-        <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
-            <table class="min-w-full border border-gray-300 mb-6">
-                <thead>
+    <div class="mx-auto">
+{#        <a href="{% url 'bulk_add_parts_to_deal' %}" class="block mt-4 text-blue-600 hover:underline">Add new deal</a>#}
+        {% if deals %}
+            <h2 class="text-lg font-semibold mb-2">Deals</h2>
+            <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead>
                     <tr class="bg-gray-100 text-left">
                         <th class="p-3 cursor-pointer" onclick="sortTable(0, 'deals-table')">Name</th>
                         <th class="p-3 cursor-pointer" onclick="sortTable(1, 'deals-table')">Estimated Completion</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(2, 'deals-table')">Customer Company</th>
+                        <th class="p-3 cursor-pointer" onclick="sortTable(3, 'deals-table')">Customer</th>
                         <th class="p-3 cursor-pointer">Actions</th>
                     </tr>
-                </thead>
-                <tbody id="deals-table">
+                    </thead>
+                    <tbody id="deals-table">
                     {% for deal in deals %}
                         <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
-                            <td class="p-2"><a href="{% url 'deal_view' deal.id %}" class="text-blue-600 hover:underline">{{ deal.name }}</a></td>
+                            <td class="p-2"><a href="{% url 'deal_view' deal.id %}"
+                                               class="text-blue-600 hover:underline">{{ deal.name }}</a></td>
                             <td class="p-2">{{ deal.estimated_completion }}</td>
+                            <td>{{ deal.company }}</td>
+                            <td>{{ deal.customer }}</td>
                             <td class="p-2">
-                                {% if deal.items %}
-                                    <a href="{% url 'bulk_edit' deal.id %}"> Edit </a>
-                                {% else %}
-                                    <a href="{% url 'bulk_add' deal.id %}">Add</a>
-                                {% endif %}
+                                <div class="flex gap-0.5">
+                                    {% if deal.items %}
+                                        <a href="{% url 'bulk_edit' deal.id %}"
+                                           class="bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 m-auto">
+                                            Edit </a>
+                                    {% else %}
+                                        <a href="{% url 'bulk_add' deal.id %}"
+                                           class="bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 m-auto">Add</a>
+                                    {% endif %}
+                                    <a href="{% url 'archive_deal' deal.id %}"
+                                       class="bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 m-auto">
+                                        Archive
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
-</div>
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -4,11 +4,11 @@ from django.contrib.auth.admin import UserAdmin
 # Register your models here.
 
 
-from .models import Part, PartDoc, PartType, Deal, Step, User
+from .models import Parts, PartDocs, PartTypes, Deals, Steps, User
 
-admin.site.register(Part)
-admin.site.register(PartDoc)
-admin.site.register(PartType)
-admin.site.register(Deal)
-admin.site.register(Step)
+admin.site.register(Parts)
+admin.site.register(PartDocs)
+admin.site.register(PartTypes)
+admin.site.register(Deals)
+admin.site.register(Steps)
 admin.site.register(User, UserAdmin)

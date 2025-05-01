@@ -1,48 +1,62 @@
 {% extends 'base.html' %}
 
 {% block navbar %}
-    <div>
-        <a href="{% url 'bulk_operations' %}" class="bg-gray-200 h-full m-auto p-2 rounded">Bulk Operations</a>
-    </div>
+    {% include 'tracker/QA_navbar.html' %}
 {% endblock %}
 
 {% block content %}
 
     <div class="font-semibold mb-2">
-        <h1>Parts</h1>
+        <h1 class="text-lg font-semibold mb-2">Parts</h1>
         <div class="mx-auto p-6 bg-white shadow-md rounded-lg">
             <table class="min-w-full border border-gray-300 mb-6">
                 <thead>
-                <tr class="bg-gray-100 text-left">
-                    <th class="p-3">ID</th>
-                    <th class="p-3">Customer Company</th>
-                    <th class="p-3">Customer</th>
-                    <th class="p-3">Name</th>
-                    <th class="p-3">Current step</th>
-                    <th class="p-3">Actions</th>
+                <tr class="bg-gray-100 text-center">
+                    <th class="p-2">ID</th>
+                    <th class="p-2">Glovia ID</th>
+                    <th class="p-2">Customer Company</th>
+                    <th class="p-2">Customer</th>
+                    <th class="p-2">Name</th>
+                    <th class="p-2">Current step</th>
+                    <th class="p-2">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for part in parts %}
-                    <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200">
-                        <td class="p-3">{{ part.id }}</td>
-                        <td class="p-3">{{ part.customer.parent_company.name }}</td>
-                        <td class="p-3">{{ part.customer.first_name }} {{ part.customer.last_name }}</td>
-                        <td class="p-3">{{ part.name }}</td>
-                        <td class="p-3">{{ part.step.description }}</td>
-                        <td class="p-3">
-                            <form method="POST" action="QA">
+                    <tr class="border-b even:bg-gray-100 odd:bg-white hover:bg-gray-200 text-center">
+                        <td class="p-1">
+                            <a href="{% url 'part_view' part.id %}">
+                                {{ part.id }}
+                            </a>
+                        </td>
+                        <td class="p-1">{{ part.glovia_id }}</td>
+                        <td class="p-1">{{ part.deal.company.name }}</td>
+                        <td class="p-1">{{ part.customer.first_name }} {{ part.customer.last_name }}</td>
+                        <td class="p-1">{{ part.name }}</td>
+                        <td class="p-1">{{ part.step.step }} : {{ part.step.description }}</td>
+                        <td class="p-1">
+                            <form method="POST" class="mb-0">
                                 {% csrf_token %}
 
 
                                 <input type="hidden" name="part_id" value="{{ part.id }}">
 
                                 <div class="flex">
+                                    
+                                    {% if part.status != 'COMPLETED' %}
                                     <button class="bg-green-500 hover:bg-green-600 text-white rounded-lg p-2 m-auto"
                                             type="submit" name="action" value="Pass">Pass
                                     </button>
+                                        {% else %}
+                                        <button class="bg-gray-300 text-white rounded-lg p-2 m-auto"
+                                            type="submit" name="action" value="Pass" disabled>Pass
+                                    </button>
+                                    {% endif %}
                                     <button class="bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 m-auto"
                                             type="submit" name="action" value="Error">Error
+                                    </button>
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-2 m-auto"
+                                            type="submit" name="action" value="Archive">Archive
                                     </button>
                                 </div>
 
