@@ -9,6 +9,7 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
+
 def get_all_deals():
     all_deals_data = []
     params = {"limit": 100, "archived": "false"}
@@ -163,3 +164,22 @@ def get_contact_info_from_contact_ids(contact_ids):
         }
 
     return contacts_data
+
+
+def update_deal_stage(deal_id, new_stage):
+    """Updates the dealstage for a specific deal in HubSpot."""
+    url = f"{HUBSPOT_API_BASE_URL}v3/objects/deals/{deal_id}"
+
+    payload = {
+        "properties": {
+            "dealstage": new_stage
+        }
+    }
+
+    try:
+        response = requests.patch(url, headers=HEADERS, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error updating deal stage: {e}")
+        return None

@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./PizzaTrackerAmbac/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  django:
+    build: ./PizzaTrackerAmbac
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py tailwind install &&
+      python manage.py tailwind build &&
+      python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+    volumes:
+      - ./PizzaTrackerAmbac:/app
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

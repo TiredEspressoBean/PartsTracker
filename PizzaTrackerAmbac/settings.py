@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv, dotenv_values
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*#*t$+%i720l19h8#l#c+zmh*=*bsoj63$6!f&_*1llj!c*5ve'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -32,6 +34,7 @@ ALLOWED_HOSTS = ["192.168.99.111", "localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django.contrib.admindocs',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -46,7 +49,9 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "django_browser_reload",
-    "formtools"
+    "formtools",
+    'auditlog',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -87,8 +92,12 @@ WSGI_APPLICATION = 'PizzaTrackerAmbac.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'tracker'),
+        'USER': os.environ.get('POSTGRES_USER', 'tracker_admin'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'tracker_admin_pw'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -162,11 +171,9 @@ LOGIN_REDIRECT_URL = '/tracker'
 
 LOGOUT_REDIRECT_URL = '/tracker'
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-load_dotenv()
-
 HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY")
+
+HUBSPOT_SYNC_ORDER_NAMES = ["Test Order Sync", "Production Alpha"]
 
 TAILWIND_APP_NAME = 'theme'
 
@@ -174,13 +181,14 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH")
 
-# TODO: Only use once ready for production
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.your-email-provider.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "your-email@example.com"
-# EMAIL_HOST_PASSWORD = "your-password"
-# DEFAULT_FROM_EMAIL = "webmaster@example.com"
+AUDITLOG_INCLUDE_ALL_MODELS = True
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "smtp.your-email-provider.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "your-email@example.com"
+EMAIL_HOST_PASSWORD = "your-password"
+DEFAULT_FROM_EMAIL = "webmaster@example.com"

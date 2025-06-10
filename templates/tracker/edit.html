@@ -1,84 +1,26 @@
-{% extends 'base.html' %}
 
-{#TODO: Add delete buttons to edit forms#}
+{% extends "base.html" %}
+
+{% block navbar %}
+    {% include 'tracker/edit_navbar.html' %}
+{% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-6 bg-white shadow-md rounded-lg">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">Edit Parts & Deals</h1>
+<div class="max-w-6xl mx-auto py-10 px-6">
+    <h1 class="text-3xl font-bold mb-4">Manage System Data</h1>
+    <p class="text-gray-600 mb-6">Select a category below to view, edit, or update records.</p>
 
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Parts</h2>
-    <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-300">
-            <thead>
-                <tr class="bg-gray-100 text-left">
-                    <th class="p-2">ID</th>
-                    <th class="p-2">Customer Company</th>
-                    <th class="p-2">Customer</th>
-                    <th class="p-2">Name</th>
-                    <th class="p-2">Status</th>
-                    <th class="p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for part in parts %}
-                <tr class="border-b even:bg-gray-50 odd:bg-white hover:bg-gray-100">
-                    <td class="p-2">{{ part.id }}</td>
-                    <td class="p-2">{{ part.customer.parent_company.name }}</td>
-                    <td class="p-2">{{ part.customer.first_name }} {{ part.customer.last_name }}</td>
-                    <td class="p-2">{{ part.name }}</td>
-                    <td class="p-2">
-                        <span class="px-3 py-1 rounded text-white 
-                            {% if part.is_complete %} bg-green-500 
-                            {% else %} bg-red-500 {% endif %}">
-                            {% if part.is_complete %} Completed {% else %} Not Completed {% endif %}
-                        </span>
-                    </td>
-                    <td class="p-2">
-                        <a href="{% url 'edit_part' part.id %}" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded">
-                            Edit
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">Deals</h2>
-    <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-300">
-            <thead>
-                <tr class="bg-gray-100 text-left">
-                    <th class="p-2">ID</th>
-                    <th class="p-2">Customer Company</th>
-                    <th class="p-2">Customer</th>
-                    <th class="p-2">Status</th>
-                    <th class="p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for deal in deals %}
-                <tr class="border-b even:bg-gray-50 odd:bg-white hover:bg-gray-100">
-                    <td class="p-2">{{ deal.id }}</td>
-                    <td class="p-2">{{ deal.company.name }}</td>
-                    <td class="p-2">{{ deal.customer.first_name }} {{ deal.customer.last_name }}</td>
-                    <td class="p-2">
-                        <span class="px-3 py-1 rounded text-white 
-                            {% if deal.is_complete %} bg-green-500 
-                            {% else %} bg-red-500 {% endif %}">
-                            {% if deal.is_complete %} Complete {% else %} Not Complete {% endif %}
-                        </span>
-                    </td>
-                    <td class="p-2">
-                        <a href="{% url 'edit_deal' deal.id %}" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded">
-                            Edit
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in models %}
+            <div class="bg-white shadow-md rounded-lg p-5 border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ item.name }}</h2>
+                <p class="text-gray-600 text-sm mb-4">{{ item.description }}</p>
+                <a href="{% url 'edit_model_page' item.model_name %}"
+                   class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                    Manage {{ item.name }}
+                </a>
+            </div>
+        {% endfor %}
     </div>
 </div>
-
 {% endblock %}
