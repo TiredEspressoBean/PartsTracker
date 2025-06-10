@@ -10,12 +10,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./PizzaTrackerAmbac/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 
   django:
-    build: ./PizzaTrackerAmbac
+    build: .  # because Dockerfile is now in current dir or use ./app if needed
     command: >
       sh -c "
       python manage.py migrate &&
@@ -30,7 +30,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
     volumes:
-      - ./PizzaTrackerAmbac:/app
+      - .:/app  # mount the whole current dir as /app inside the container
     depends_on:
       - postgres
 
