@@ -73,7 +73,7 @@
                 <h2 class="text-2xl font-semibold mb-4">Related Items</h2>
                 <div
                         id="related-table"
-                        hx-get="/tables/generic_table_view/Orders?parent_id=4"
+                        hx-get="{{ table_partial_url }}?order_id={{ related_object_id }}"
                         hx-trigger="load"
                         hx-target="this"
                         hx-swap="innerHTML"

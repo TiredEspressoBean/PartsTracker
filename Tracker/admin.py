@@ -115,7 +115,7 @@ class EquipmentUsageAdmin(admin.ModelAdmin):
 
 @admin.register(ExternalAPIOrderIdentifier)
 class ExternalAPIOrderIdentifierAdmin(admin.ModelAdmin):
-    list_display = ("order_id", "external_id")
+    list_display = ("stage_name", "API_id")
 
 
 @admin.register(ArchiveReason)

@@ -41,6 +41,7 @@ urlpatterns = [
 
     # TODO: Think I got rid of all uses of these two but not sure?
     path('edit_part/<int:part_id>/', views.edit_part, name='edit_part'),
+
     path('edit_deal/<int:deal_id>/', views.edit_deal, name='edit_deal'),
     path('edit/', views.edit, name='edit'),
 
@@ -64,7 +65,7 @@ urlpatterns = [
 
     path('deals/<int:order_id>/archive/', views.archive_deal, name='archive_deal'),
 
-
+    # path("add_parts/<int:order_id>", name="add_parts"),)
 ]
 
 urlpatterns += staticfiles_urlpatterns()
@@ -104,6 +105,8 @@ urlpatterns += [
     path("download/<str:model_name>/<int:pk>/<str:field>/", views.download_file, name="download_file"),
 
     path("upload_part_doc", views.upload_part_doc, name="upload_part_doc"),
+
+    path("history", views.history, name="history"),
 ]
 
 urlpatterns += [

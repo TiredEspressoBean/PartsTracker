@@ -3,6 +3,9 @@ import io
 import os
 import uuid
 
+from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import now
+from auditlog.models import LogEntry
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
@@ -72,7 +75,7 @@ def tracker(request):
         else:
             deals = Orders.objects.filter(customer=user)
             context.update({'deals': deals})
-            parts = Parts.objects.filter(customer=user)
+            parts = Parts.objects.filter(order__customer=user)
             context.update({'parts': parts})
     return render(request, template_name='tracker/tracker.html', context=context)
 
@@ -949,56 +952,55 @@ PART_EDIT_THRESHOLD = 200
 
 
 class OrderUpdateView(View):
-    class OrderUpdateView(View):
-        """
-        View Name: OrderUpdateView
+    """
+    View Name: OrderUpdateView
 
-        URL Pattern:
-            path('orders/<int:order_id>/edit/', views.OrderUpdateView.as_view(), name='order_edit')
+    URL Pattern:
+        path('orders/<int:order_id>/edit/', views.OrderUpdateView.as_view(), name='order_edit')
 
-        Inherits:
-            - django.views.View
+    Inherits:
+        - django.views.View
 
-        Purpose:
-            Allows users to update an existing `Order` (formerly Deal) and its associated `Parts`.
-            Depending on the number of parts, the view either renders a formset for inline editing or switches to a CSV upload mode.
+    Purpose:
+        Allows users to update an existing `Order` (formerly Deal) and its associated `Parts`.
+        Depending on the number of parts, the view either renders a formset for inline editing or switches to a CSV upload mode.
 
-        GET Parameters:
-            None
+    GET Parameters:
+        None
 
-        POST Parameters:
-            - Order form fields from DealForm
-            - Part formset fields from PartFormSet (if under threshold)
-            - CSV file upload (if over threshold)
+    POST Parameters:
+        - Order form fields from DealForm
+        - Part formset fields from PartFormSet (if under threshold)
+        - CSV file upload (if over threshold)
 
-        Parameters:
-            request (HttpRequest): The HTTP request object.
-            order_id (int): The ID of the order to be updated.
+    Parameters:
+        request (HttpRequest): The HTTP request object.
+        order_id (int): The ID of the order to be updated.
 
-        Raises:
-            Http404: If the specified Order does not exist.
+    Raises:
+        Http404: If the specified Order does not exist.
 
-        Templates:
-            tracker/deal_form.html
+    Templates:
+        tracker/deal_form.html
 
-        Context (GET and POST):
-            {
-                "deal_form": DealForm instance (bound or unbound),
-                "part_formset": PartFormSet instance or None,
-                "lineitem_formset": LineItemFormSet (unbound),
-                "use_csv": bool,  # True if CSV upload mode is used
-                "deal": Order instance,
-            }
+    Context (GET and POST):
+        {
+            "deal_form": DealForm instance (bound or unbound),
+            "part_formset": PartFormSet instance or None,
+            "lineitem_formset": LineItemFormSet (unbound),
+            "use_csv": bool,  # True if CSV upload mode is used
+            "deal": Order instance,
+        }
 
-        Notes:
-            - Uses `PART_EDIT_THRESHOLD` to decide between inline editing vs. CSV upload mode.
-            - CSV upload logic is currently stubbed out and should be implemented under the POST flow.
-            - Assumes authenticated access but does not enforce it via decorator — ensure proper URL protection.
-            - Uses `LineItemFormSet` for dynamic line item creation, rendered even if part_formset is not shown.
+    Notes:
+        - Uses `PART_EDIT_THRESHOLD` to decide between inline editing vs. CSV upload mode.
+        - CSV upload logic is currently stubbed out and should be implemented under the POST flow.
+        - Assumes authenticated access but does not enforce it via decorator — ensure proper URL protection.
+        - Uses `LineItemFormSet` for dynamic line item creation, rendered even if part_formset is not shown.
 
-        Example Usage:
-            <a href="{% url 'order_edit' order.id %}">Edit Order</a>
-        """
+    Example Usage:
+        <a href="{% url 'order_edit' order.id %}">Edit Order</a>
+    """
 
     def get(self, request, order_id):
         order = get_object_or_404(Orders, pk=order_id)
@@ -1022,6 +1024,7 @@ class OrderUpdateView(View):
         })
 
     def post(self, request, order_id):
+        lineitem_formset = LineItemFormSet(prefix="lineitem")
         order = get_object_or_404(Orders, pk=order_id)
         order_form = DealForm(request.POST, instance=order)
         parts_qs = Parts.objects.filter(order=order, archived=False)
@@ -1043,9 +1046,36 @@ class OrderUpdateView(View):
 
         # Inline formset flow
         part_formset = PartFormSet(request.POST, queryset=parts_qs)
-        if order_form.is_valid() and part_formset.is_valid():
+
+        if order_form.is_valid() and part_formset.is_valid() and lineitem_formset.is_valid():
             order_form.save()
             part_formset.save()
+
+            for form in lineitem_formset:
+                quantity = form.cleaned_data.get("quantity")
+                part_type = form.cleaned_data.get("part_type")
+                process = form.cleaned_data.get("process")
+                enumeration_start = form.cleaned_data.get("enumeration_start") or 1
+
+                if quantity and part_type and process:
+                    try:
+                        first_step = Steps.objects.get(process=process, step=1)
+                    except Steps.DoesNotExist:
+                        continue
+
+                    for i in range(quantity):
+                        erp_id = f"{part_type.ID_prefix or 'PART'}-{enumeration_start + i}"
+                        try:
+                            Parts.objects.create(
+                                ERP_id=erp_id,
+                                part_type=part_type,
+                                step=first_step,
+                                order=order,
+                            )
+                        except Exception as e:
+                            print(f"Error creating part {erp_id}: {e}")
+                            continue
+
             return redirect("deal_view", order_id=order.id)
 
         return render(request, "tracker/deal_form.html", {
@@ -1594,10 +1624,33 @@ def generic_table_view(request, model_name):
     Example:
         <a href="{% url 'generic_table_view' 'Parts' %}?q=123&status=Active&qa_mode=true">Filtered Parts Table</a>
     """
-    app_label = 'Tracker'
-    Model = apps.get_model(app_label, model_name)
+    # Support either 'ModelName' or 'app_label.ModelName'
+    if '_' in model_name:
+        app_label, model_str = model_name.split('_', 1)
+    else:
+        app_label = 'Tracker'  # default app
+        model_str = model_name
+
+    try:
+        Model = apps.get_model(app_label, model_str)
+    except LookupError:
+        raise Http404("Model not found.")
 
     CONFIG = {
+        "auditlog_logentry": {
+            "headers": ["Timestamp", "Actor Email", "Action", "Object", "Changes", "Remote IP"],
+            "fields": ["timestamp", "actor_email", "action", "object_repr", "changes_text", "remote_addr"],
+            "link_prefix": "auditlog_logentry",
+            "search_fields": [
+                "actor_email",
+                "object_repr",
+                "changes_text",
+                "remote_addr",
+                "action",
+                "additional_data"
+            ],
+            "filter_fields": ["action", "actor_email"]
+        },
         "Orders": {
             "headers": ["Name", "Estimated Completion", "Status"],
             "fields": ["name", "estimated_completion", "status"],
@@ -1708,6 +1761,15 @@ def generic_table_view(request, model_name):
         except Exception:
             filter_values[field] = []
 
+    sort = request.GET.get("sort")
+    direction = request.GET.get("direction", "asc")
+
+    if sort and sort in config["fields"]:
+        if direction == "desc":
+            qs = qs.order_by(f"-{sort}")
+        else:
+            qs = qs.order_by(sort)
+
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
@@ -1715,7 +1777,13 @@ def generic_table_view(request, model_name):
     qa_mode = request.GET.get("qa_mode") == "true"
     edit_mode = request.GET.get("edit_mode") == "true"
 
+    header_field_pairs = list(zip(
+        config["headers"] + ["Actions"] if (qa_mode or edit_mode) else config["headers"],
+        config["fields"] + [""] if (qa_mode or edit_mode) else config["fields"]
+    ))
+
     context = {
+        "header_field_pairs": header_field_pairs,
         "headers": config["headers"] + ["Actions"] if (qa_mode or edit_mode) else config["headers"],
         "fields": config["fields"],
         "rows": page_obj.object_list,
@@ -1737,6 +1805,11 @@ def generic_table_view(request, model_name):
 
     return render(request, "tracker/partials/generic_table.html", context)
 
+
+def get_client_ip(request):
+    """Utility to safely extract the client IP address."""
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    return x_forwarded_for.split(",")[0] if x_forwarded_for else request.META.get("REMOTE_ADDR")
 
 @staff_member_required(login_url="login")
 def download_file(request, model_name, pk, field):
@@ -1785,7 +1858,30 @@ def download_file(request, model_name, pk, field):
     if not file_field or not hasattr(file_field, "path") or not os.path.exists(file_field.path):
         raise Http404("File not found")
 
-    return FileResponse(open(file_field.path, "rb"), as_attachment=True)
+    # ✅ Log the download
+    try:
+        LogEntry.objects.create(
+            actor=request.user,
+            actor_email=request.user.email if request.user.is_authenticated else None,
+            action=LogEntry.Action.ACCESS,
+            content_type=ContentType.objects.get_for_model(type(obj), for_concrete_model=False),  # ✅ THIS LINE FIXES IT
+            object_pk=str(obj.pk),
+            object_id=obj.pk,
+            object_repr=str(obj),
+            timestamp=now(),
+            remote_addr=get_client_ip(request),
+            changes_text=f"Downloaded file from field '{field}'",
+            changes={"downloaded": True},
+            additional_data={
+                "filename": file_field.name,
+                "field": field,
+                "model": model_name,
+            }
+        )
+    except Exception as e:
+        print(f"Failed to log download: {e}")
+
+    return FileResponse(open(file_field.path, "rb"), as_attachment=True, filename=os.path.basename(file_field.name))
 
 
 @staff_member_required(login_url="login")
@@ -1825,7 +1921,7 @@ def edit_model_page(request, model_name):
         <a href="{% url 'edit_model_page' 'Parts' %}">Edit Parts</a>
     """
     allowed_models = ["Parts", "Orders", "PartTypes", "Processes", "Steps", "Equipments", "QualityErrorsList",
-                      "EquipmentType", "WorkOrder"]
+                      "EquipmentType", "WorkOrder", "auditlog_logentry"]
     if model_name not in allowed_models:
         raise Http404("Invalid model")
 
@@ -1838,3 +1934,6 @@ def deal_pass(request, order_id):
     for part in parts:
         part.increment_step()
     return redirect("qa_orders")
+
+def history(request):
+    return render(request, "tracker/history.html")

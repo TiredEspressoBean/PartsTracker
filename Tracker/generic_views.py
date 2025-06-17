@@ -352,8 +352,9 @@ class GenericViewEntry(DetailView):
         # Enable HTMX table view for specific models
         if model_name in ["orders", "processes"]:
             model_name = "Orders" if model_name == "orders" else "Processes"
+            related_table = "Parts" if model_name == "Orders" else "Steps"
             context["has_related_table"] = True
-            context["table_partial_url"] = reverse_lazy("generic_table_view", kwargs={"model_name": model_name})
+            context["table_partial_url"] = reverse_lazy("generic_table_view", kwargs={"model_name": related_table})
             context["related_object_id"] = obj.pk
 
         return context

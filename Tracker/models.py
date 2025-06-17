@@ -431,11 +431,7 @@ class Orders(models.Model):
         PRODUCT_AND_PROCESS_VALIDATION = 'PRODUCT AND PROCESS VALIDATION', "Product and process validation"
         PRODUCTION = 'PRODUCTION', "Production"
 
-    current_hubspot_gate = models.CharField(
-        max_length=50,
-        choices=APQP.choices,
-        default=APQP.PLANNING
-    )
+    current_hubspot_gate = models.ForeignKey("ExternalAPIOrderIdentifier", blank=True, null=True, on_delete=models.SET_NULL)
 
     """Optional field to track HubSpot pipeline status or stage."""
 
@@ -443,7 +439,7 @@ class Orders(models.Model):
     """Soft-deletion flag for keeping old data without fully deleting the record."""
 
     # --- HubSpot Integration Fields ---
-    hubspot_deal_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    hubspot_deal_id = models.CharField(max_length=60, unique=True, null=True, blank=True)
     last_synced_hubspot_stage = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
@@ -482,18 +478,10 @@ class Orders(models.Model):
         )
 
     def push_to_hubspot(self):
-        if self.name not in getattr(settings, "HUBSPOT_SYNC_ORDER_NAMES", []):
+        if not self.hubspot_deal_id:
             return
 
-        if not self.hubspot_deal_id or not self.current_hubspot_gate:
-            return
-
-        if self.current_hubspot_gate == self.last_synced_hubspot_stage:
-            return
-
-        response = update_deal_stage(self.hubspot_deal_id, self.current_hubspot_gate)
-        if response:
-            self.last_synced_hubspot_stage = self.current_hubspot_gate
+        response = update_deal_stage(self.hubspot_deal_id, self.current_hubspot_gate, self)
 
     def save(self, *args, **kwargs):
         is_update = self.pk is not None
@@ -509,7 +497,6 @@ class Orders(models.Model):
 
         if is_update and self.current_hubspot_gate != old_stage:
             self.push_to_hubspot()
-            super().save(update_fields=["last_synced_hubspot_stage"])
 
     def __str__(self):
         """Returns the order name for human-readable use in admin or logs."""
@@ -960,16 +947,10 @@ class ExternalAPIOrderIdentifier(models.Model):
     It supports integrations that require reconciliation between internal and external IDs.
     """
 
-    order_id = models.ForeignKey(
-        Orders,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="external_ids"
-    )
+    stage_name = models.CharField(max_length=100, unique=True)
     """The internal `Order` object this external identifier corresponds to."""
 
-    external_id = models.CharField(max_length=50)
+    API_id = models.CharField(max_length=50)
     """The external system’s identifier for the order (e.g., from HubSpot, ERP, etc.)."""
 
     class Meta:
@@ -980,7 +961,7 @@ class ExternalAPIOrderIdentifier(models.Model):
         """
         Returns a string that clearly represents the external mapping.
         """
-        return f"External ID {self.external_id} for Order {self.order_id_id or 'Unlinked'}"
+        return f"Hubspot deal stage: {self.stage_name}, id: {self.API_id}"
 
 
 

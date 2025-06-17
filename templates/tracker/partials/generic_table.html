@@ -32,8 +32,23 @@
         <table class="min-w-full border border-gray-300 mb-6">
             <thead class="bg-gray-100 text-center">
             <tr>
-                {% for header in headers %}
-                    <th class="p-3">{{ header }}</th>
+                {% for header, field in header_field_pairs %}
+                    <th class="p-3 cursor-pointer"
+                        {% if field %}
+                        hx-get="{% url 'generic_table_view' model_name %}?sort={{ field }}&direction={% if request.GET.sort == field and request.GET.direction != 'desc' %}desc{% else %}asc{% endif %}{% if query %}&q={{ query }}{% endif %}"
+                        hx-target="#{{ table_id }}"
+                        hx-push-url="true"
+                        hx-swap="innerHTML"
+                        {% endif %}>
+                        {{ header }}
+                        {% if request.GET.sort == field %}
+                            {% if request.GET.direction == 'desc' %}
+                                ▼
+                            {% else %}
+                                ▲
+                            {% endif %}
+                        {% endif %}
+                    </th>
                 {% endfor %}
             </tr>
             </thead>

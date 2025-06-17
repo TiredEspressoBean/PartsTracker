@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv, dotenv_values
-load_dotenv()
+load_dotenv(dotenv_path='.env')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,8 +28,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.99.111", "localhost", "127.0.0.1"]
-
+# ALLOWED_HOSTS = ["192.168.99.1", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -167,6 +167,8 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+DJANGO_DEBUG = os.environ.get('DJANGO_DEBUG', True)
+
 LOGIN_REDIRECT_URL = '/tracker'
 
 LOGOUT_REDIRECT_URL = '/tracker'
@@ -184,6 +186,8 @@ INTERNAL_IPS = [
 NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH")
 
 AUDITLOG_INCLUDE_ALL_MODELS = True
+
+HUBSPOT_DEBUG = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = "smtp.your-email-provider.com"
